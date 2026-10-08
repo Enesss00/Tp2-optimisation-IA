@@ -1,0 +1,23 @@
+$ echo "core.hooksPath = [$(git config core.hooksPath)]"
+ls -l .husky/pre-commit; ls .husky/_/husky.sh 2>&1
+grep -n "husky\|prepare" package.json || echo "package.json : ni husky en devDependency, ni script prepare"
+ls node_modules/.bin/husky 2>&1
+ls .git/hooks | grep -v sample || echo ".git/hooks : aucun hook actif (que des .sample)"
+echo "--- commit d un test rouge dans une copie jetable :"
+rm -rf /tmp/claude-0/copie && git clone -q . /tmp/claude-0/copie && cd /tmp/claude-0/copie && ln -s /home/user/Tp2-optimisation-IA/node_modules node_modules
+printf "import {it,expect} from \"vitest\";\nit(\"rouge\",()=>expect(1).toBe(2));\nconst x: number = \"pas un nombre\";\n" > test/rouge.spec.ts
+git add test/rouge.spec.ts && git -c user.email=t@t -c user.name=t commit -qm "test rouge + erreur de type" && echo ">>> COMMIT ACCEPTE : aucun hook n a tourné"; git log --oneline -1
+npx tsc --noEmit | head -2; npx vitest run 2>&1 | grep "Tests "
+core.hooksPath = []
+-rw-r--r-- 1 root root 102 Oct  8 09:45 .husky/pre-commit
+ls: cannot access '.husky/_/husky.sh': No such file or directory
+package.json : ni husky en devDependency, ni script prepare
+ls: cannot access 'node_modules/.bin/husky': No such file or directory
+.git/hooks : aucun hook actif (que des .sample)
+--- commit d un test rouge dans une copie jetable :
+>>> COMMIT ACCEPTE : aucun hook n a tourné
+91f48d5 test rouge + erreur de type
+test/rouge.spec.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 5 passed | 4 skipped (10)
+[exit=0]

@@ -1,0 +1,16 @@
+$ ls test/; echo "--- fichiers que vitest collecte :"; npx vitest list --filesOnly 2>/dev/null || npx vitest list | cut -d" " -f1 | sort -u; echo "--- tests skip / assertions vides :"; grep -n "it.skip\|it.only\|expect(true)" test/*.ts
+bookings.test.ts
+overlap.spec.ts
+price.test.ts
+store.spec.ts
+--- fichiers que vitest collecte :
+test/overlap.spec.ts
+test/store.spec.ts
+--- tests skip / assertions vides :
+test/overlap.spec.ts:27:  it.skip("accepte deux creneaux bout a bout", () => {
+test/overlap.spec.ts:38:  it.skip("gere un creneau inclus dans un autre", () => {
+test/overlap.spec.ts:39:    expect(true).toBe(true);
+test/overlap.spec.ts:42:  it.skip("gere les creneaux identiques", () => {
+test/overlap.spec.ts:43:    expect(true).toBe(true);
+test/overlap.spec.ts:50:  it.skip("ne trouve aucun chevauchement dans l'export de l'ancien systeme", async () => {
+[exit=0]

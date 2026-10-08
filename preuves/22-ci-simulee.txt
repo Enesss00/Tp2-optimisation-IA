@@ -1,0 +1,22 @@
+$ echo "## étapes run: de .github/workflows/ci.yml"; grep -n "run:\|branches\|pull_request" .github/workflows/ci.yml
+echo; echo "## rejeu local des étapes CI sur le code d origine (copie propre, avec un test rouge commité dans /tmp/claude-0/copie)"
+cd /tmp/claude-0/copie && rm node_modules && npm ci --silent --no-audit --no-fund >/dev/null 2>&1; echo "npm ci exit=$?"; npm run --silent lint; echo "npm run lint exit=$?  => CI VERTE"
+echo "(pendant ce temps : typecheck et tests, que la CI ne lance pas)"; npx tsc --noEmit >/dev/null; echo "tsc exit=$?"; npx vitest run >/dev/null 2>&1; echo "vitest exit=$?"
+echo; echo "## branche par défaut du dépôt d origine :"; git ls-remote --symref https://github.com/0xaitox/ai-tools-repo-malade HEAD | head -1
+## étapes run: de .github/workflows/ci.yml
+5:    branches: [main]
+6:  pull_request:
+17:      - run: npm ci
+18:      - run: npm run lint
+19:      # - run: npm run test:unit   # TODO remettre, ca bloquait les merges
+
+## rejeu local des étapes CI sur le code d origine (copie propre, avec un test rouge commité dans /tmp/claude-0/copie)
+npm ci exit=0
+npm run lint exit=0  => CI VERTE
+(pendant ce temps : typecheck et tests, que la CI ne lance pas)
+tsc exit=2
+vitest exit=1
+
+## branche par défaut du dépôt d origine :
+ref: refs/heads/main	HEAD
+[exit=0]

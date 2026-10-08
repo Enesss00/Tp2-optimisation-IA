@@ -1,0 +1,17 @@
+$ echo "--- src/lib/price.ts commence par :"; head -1 src/lib/price.ts
+echo "--- typecheck actuel :"; npm run --silent typecheck; echo "exit=$?"
+echo "--- même typecheck en retirant juste // @ts-nocheck (copie temporaire) :"
+cp src/lib/price.ts /tmp/claude-0/price.bak; sed -i 1d src/lib/price.ts; npx tsc --noEmit; echo "exit=$?"; cp /tmp/claude-0/price.bak src/lib/price.ts
+echo "--- avec strict:true (sans toucher au code) :"; npx tsc --noEmit --strict; echo "exit=$?"; git status --short
+--- src/lib/price.ts commence par :
+// @ts-nocheck
+--- typecheck actuel :
+exit=0
+--- même typecheck en retirant juste // @ts-nocheck (copie temporaire) :
+src/lib/price.ts(18,5): error TS2322: Type 'string' is not assignable to type 'number'.
+exit=2
+--- avec strict:true (sans toucher au code) :
+exit=0
+ M package-lock.json
+?? preuves/
+[exit=0]

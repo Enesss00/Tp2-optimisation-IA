@@ -1,0 +1,12 @@
+$ git ls-files .env; git check-ignore -v .env || echo ".env n est PAS ignoré par .gitignore"; git log --format="%h %ad %an %s" --date=short -- .env; echo "--- clés présentes (valeurs masquées) :"; sed -E "s/=(.{4}).*/=\1****/" .env | grep "="; echo "--- usages dans le code :"; grep -rn "process.env" src || true
+.env
+.env n est PAS ignoré par .gitignore
+ecd0790 2026-02-26 Samir Benali chore: fichier d'env de recette pour l'equipe
+--- clés présentes (valeurs masquées) :
+PORT=3000****
+SALLES_DB_URL=post****
+SESSION_SECRET=8f2b****
+STRIPE_SECRET_KEY=sk_t****
+--- usages dans le code :
+src/server.ts:3:const port = Number(process.env.PORT ?? 3000);
+[exit=0]

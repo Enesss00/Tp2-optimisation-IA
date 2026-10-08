@@ -1,0 +1,24 @@
+$ npm run; npm test; npm run build
+Lifecycle scripts included in salles-api@0.4.2:
+  start
+    tsx src/server.ts
+available via `npm run-script`:
+  dev
+    tsx watch src/server.ts
+  test:unit
+    vitest run
+  lint
+    eslint src test
+  typecheck
+    tsc --noEmit
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-10-08T09_47_22_597Z-debug-0.log
+npm error Missing script: "build"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-10-08T09_47_22_722Z-debug-0.log
+[exit=1]

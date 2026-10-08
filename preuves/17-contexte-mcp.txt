@@ -1,0 +1,12 @@
+$ C=/tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/mcpc/count.mjs
+timeout 100 node $C github npx -y @modelcontextprotocol/server-github
+timeout 100 node $C notion npx -y @notionhq/notion-mcp-server
+timeout 100 node $C slack npx -y @modelcontextprotocol/server-slack
+timeout 100 node $C playwright npx -y @playwright/mcp@latest
+echo 'salles-db  : injoignable (502, hote DNS inconnu) ; sentry : demande une authentification OAuth (non mesurable)'
+github       26 outils   15880 caracteres  ~3970 tokens
+notion       24 outils   74690 caracteres  ~18673 tokens
+slack       ECHEC: MCP error -32000: Connection closed
+playwright   25 outils   17616 caracteres  ~4404 tokens
+salles-db  : injoignable (502, hote DNS inconnu) ; sentry : demande une authentification OAuth (non mesurable)
+[exit=0]

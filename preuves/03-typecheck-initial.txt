@@ -1,0 +1,6 @@
+$ npm run typecheck
+
+> salles-api@0.4.2 typecheck
+> tsc --noEmit
+
+[exit=0]

@@ -1,0 +1,12 @@
+$ for f in AGENTS.md src/lib/AGENTS.md .opencode/agent/*.md .opencode/command/ship.md; do printf "%-32s %6s caracteres ~%5s tokens\n" $f $(wc -c <$f) $(( $(wc -c <$f)/4 )); done
+AGENTS.md                          1323 caracteres ~  330 tokens
+src/lib/AGENTS.md                   532 caracteres ~  133 tokens
+.opencode/agent/architect.md       5070 caracteres ~ 1267 tokens
+.opencode/agent/dev.md             3166 caracteres ~  791 tokens
+.opencode/agent/explorer.md        3042 caracteres ~  760 tokens
+.opencode/agent/finder.md          2221 caracteres ~  555 tokens
+.opencode/agent/planner.md         3210 caracteres ~  802 tokens
+.opencode/agent/reviewer.md        3036 caracteres ~  759 tokens
+.opencode/agent/tester.md          3281 caracteres ~  820 tokens
+.opencode/command/ship.md           413 caracteres ~  103 tokens
+[exit=0]

@@ -1,0 +1,12 @@
+$ cp src/store.ts /tmp/claude-0/store.bak
+sed -i "s/return rooms.find((r) => r.id === id);/return undefined;/; s/return bookings.filter((b) => b.roomId === roomId);/return [];/" src/store.ts
+echo "--- store.ts saboté :"; grep -n "return undefined;\|return \[\];" src/store.ts
+npx vitest run test/store.spec.ts 2>&1 | grep -E "Tests|✓|×"
+cp /tmp/claude-0/store.bak src/store.ts; git diff --quiet src/store.ts && echo "(store.ts restauré)"
+--- store.ts saboté :
+54:  return undefined;
+58:  return [];
+ ✓ test/store.spec.ts (3 tests) 3ms
+      Tests  3 passed (3)
+(store.ts restauré)
+[exit=0]

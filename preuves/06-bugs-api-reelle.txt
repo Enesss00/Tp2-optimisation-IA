@@ -1,0 +1,11 @@
+$ (PORT=3100 timeout 10 npx tsx src/server.ts >/dev/null 2>&1 &); sleep 3
+H="content-type: application/json"
+echo "## Bug prix : réservation un samedi (2h x 25 EUR + majoration 20 EUR attendue = 70)"
+curl -s -X POST localhost:3100/bookings -H "$H" -d "{\"roomId\":\"salle-a\",\"who\":\"moi\",\"people\":4,\"startsAt\":\"2026-10-10T09:00:00Z\",\"endsAt\":\"2026-10-10T11:00:00Z\"}"; echo
+echo "## Bug chevauchement : bk-1001 occupe salle-a 09:00-11:00 le 05/10, on réserve 11:00-12:00 (bout à bout)"
+curl -s -w " HTTP %{http_code}" -X POST localhost:3100/bookings -H "$H" -d "{\"roomId\":\"salle-a\",\"who\":\"moi\",\"people\":4,\"startsAt\":\"2026-10-05T11:00:00Z\",\"endsAt\":\"2026-10-05T12:00:00Z\"}"; echo
+## Bug prix : réservation un samedi (2h x 25 EUR + majoration 20 EUR attendue = 70)
+{"booking":{"id":"bk-1003","roomId":"salle-a","who":"moi","people":4,"startsAt":"2026-10-10T09:00:00Z","endsAt":"2026-10-10T11:00:00Z","price":"5020"}}
+## Bug chevauchement : bk-1001 occupe salle-a 09:00-11:00 le 05/10, on réserve 11:00-12:00 (bout à bout)
+{"error":"creneau deja reserve","conflictsWith":"bk-1001"} HTTP 409
+[exit=0]

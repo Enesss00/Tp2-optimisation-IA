@@ -1,0 +1,6 @@
+$ npm run lint
+
+> salles-api@0.4.2 lint
+> eslint src test
+
+[exit=0]

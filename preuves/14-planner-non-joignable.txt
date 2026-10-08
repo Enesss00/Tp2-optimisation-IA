@@ -1,0 +1,10 @@
+$ curl "localhost:4096/experimental/tool?provider=opencode&model=deepseek-v4-pro" | description de l outil task (agents que l architecte peut appeler)
+ and the tools they have access to:
+- dev: Implement one bounded step of a plan, with the project's checks green. The only agent allowed to change code.
+- explore: Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.
+- explorer: Understand code. Reads a subsystem deeply and returns a short, grounded brief on how it actually works.
+- finder: Locate code and explain what it does. Finds the relevant places and reports what they mean for the task at hand.
+- general: General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.
+- reviewer: Reviews a diff and fixes what it finds. Leaves the branch in a mergeable state.
+- tester: Run the real app and try to break it, like a user would. Reports reproducible failures, never fixes them.
+>>> planner absent de la liste : il est en mode primary, l outil task ne peut pas le lancer.

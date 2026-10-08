@@ -1,0 +1,38 @@
+$ export HOME=/tmp/claude-0/ochome; timeout 240 opencode mcp list 2>&1 | sed "s/\x1b\[[0-9;]*m//g"; echo "--- résolution DNS de l hôte salles-db :"; getent hosts mcp.internal.salles.lan || echo "mcp.internal.salles.lan : introuvable"; echo "--- variables attendues par les MCP présentes dans l environnement ?"; for v in SALLES_MCP_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN NOTION_TOKEN OPENAPI_MCP_HEADERS SLACK_BOT_TOKEN SLACK_TEAM_ID; do printf "%s=%s\n" $v "${!v:-<absente>}"; done; echo "--- syntaxe de variable dans opencode.json :"; grep -n "SALLES_MCP_TOKEN" opencode.json
+
+T  MCP Servers
+|
+•  ✗ salles-db failed
+|      SSE error: Non-200 status code (502)
+|      https://mcp.internal.salles.lan/db
+|
+•  ✓ github connected
+|      npx -y @modelcontextprotocol/server-github
+|
+•  ✓ notion connected
+|      npx -y @notionhq/notion-mcp-server
+|
+•  ✗ slack failed
+|      MCP error -32000: Connection closed
+|      npx -y @modelcontextprotocol/server-slack
+|
+•  ⚠ sentry needs authentication
+|      https://mcp.sentry.dev/mcp
+|
+•  ✓ playwright connected
+|      npx -y @playwright/mcp@latest
+|
+—  6 server(s)
+
+--- résolution DNS de l hôte salles-db :
+mcp.internal.salles.lan : introuvable
+--- variables attendues par les MCP présentes dans l environnement ?
+SALLES_MCP_TOKEN=<absente>
+GITHUB_PERSONAL_ACCESS_TOKEN=<absente>
+NOTION_TOKEN=<absente>
+OPENAPI_MCP_HEADERS=<absente>
+SLACK_BOT_TOKEN=<absente>
+SLACK_TEAM_ID=<absente>
+--- syntaxe de variable dans opencode.json :
+12:        "Authorization": "Bearer ${SALLES_MCP_TOKEN}"
+[exit=0]

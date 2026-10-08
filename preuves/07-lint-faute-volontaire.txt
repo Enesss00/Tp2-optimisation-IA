@@ -1,0 +1,16 @@
+$ cp src/app.ts /tmp/claude-0/app.bak
+cat >> src/app.ts <<EOT
+const inutilise = 42;
+export function bug(x: any) { if (x == null) { debugger; } var y = undefined; return eval("x"); }
+EOT
+echo "--- faute injectée dans src/app.ts (variable inutilisée, any, ==, debugger, var, eval) :"; tail -2 src/app.ts
+npm run --silent lint; echo "lint exit=$?"
+npx eslint --print-config src/app.ts | node -e "let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>console.log(\"regles actives:\",Object.keys(JSON.parse(s).rules||{}).length))"
+cp /tmp/claude-0/app.bak src/app.ts; git diff --stat src/app.ts; echo "(faute annulée)"
+--- faute injectée dans src/app.ts (variable inutilisée, any, ==, debugger, var, eval) :
+const inutilise = 42;
+export function bug(x: any) { if (x == null) { debugger; } var y = undefined; return eval("x"); }
+lint exit=0
+regles actives: 0
+(faute annulée)
+[exit=0]

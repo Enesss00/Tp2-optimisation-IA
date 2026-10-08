@@ -1,0 +1,17 @@
+$ npm run test:unit
+
+> salles-api@0.4.2 test:unit
+> vitest run
+
+
+ RUN  v2.1.9 /home/user/Tp2-optimisation-IA
+
+ ✓ test/overlap.spec.ts (6 tests | 4 skipped) 3ms
+ ✓ test/store.spec.ts (3 tests) 3ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed | 4 skipped (9)
+   Start at  09:47:23
+   Duration  345ms (transform 129ms, setup 0ms, collect 114ms, tests 7ms, environment 0ms, prepare 148ms)
+
+[exit=0]

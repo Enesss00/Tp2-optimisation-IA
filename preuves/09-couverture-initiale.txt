@@ -1,0 +1,19 @@
+$ npx vitest run --coverage --coverage.include="src/**" --coverage.reporter=text 2>&1 | sed -n "/Coverage report/,\$p"
+ % Coverage report from v8
+--------------|---------|----------|---------|---------|-------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------|---------|----------|---------|---------|-------------------
+All files     |   21.38 |    42.85 |      30 |   21.38 |                   
+ src          |   58.82 |        0 |       0 |   58.82 |                   
+  app.ts      |       0 |        0 |       0 |       0 | 1-12              
+  server.ts   |       0 |        0 |       0 |       0 | 1-7               
+  store.ts    |   81.08 |      100 |       0 |   81.08 | 49-51,54-55,58-59 
+ src/lib      |   15.21 |      100 |     100 |   15.21 |                   
+  overlap.ts  |     100 |      100 |     100 |     100 |                   
+  price.ts    |       0 |      100 |     100 |       0 | 5-22              
+  validate.ts |       0 |      100 |     100 |       0 | 4-30              
+ src/routes   |       0 |        0 |       0 |       0 |                   
+  bookings.ts |       0 |        0 |       0 |       0 | 1-75              
+  rooms.ts    |       0 |        0 |       0 |       0 | 1-17              
+--------------|---------|----------|---------|---------|-------------------
+[exit=0]

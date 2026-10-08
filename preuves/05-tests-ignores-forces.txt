@@ -1,0 +1,42 @@
+$ npx vitest run test/bookings.test.ts test/price.test.ts --config /dev/null 2>&1 | grep -v "^$" | tail -40
+ RUN  v2.1.9 /home/user/Tp2-optimisation-IA
+ ❯ test/price.test.ts (4 tests | 1 failed) 9ms
+   × priceFor > ajoute la majoration de week-end 6ms
+     → expected '5020' to be 70 // Object.is equality
+ ❯ test/bookings.test.ts (5 tests | 1 failed) 66ms
+   × POST /bookings > accepte une reservation qui commence quand la precedente finit 15ms
+     → expected 409 to be 201 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  test/bookings.test.ts > POST /bookings > accepte une reservation qui commence quand la precedente finit
+AssertionError: expected 409 to be 201 // Object.is equality
+- Expected
++ Received
+- 201
++ 409
+ ❯ test/bookings.test.ts:85:27
+     83|       endsAt: "2026-11-03T11:00:00Z"
+     84|     });
+     85|     expect(second.status).toBe(201);
+       |                           ^
+     86|   });
+     87| });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  test/price.test.ts > priceFor > ajoute la majoration de week-end
+AssertionError: expected '5020' to be 70 // Object.is equality
+- Expected: 
+70
++ Received: 
+"5020"
+ ❯ test/price.test.ts:13:78
+     11|   it("ajoute la majoration de week-end", () => {
+     12|     // samedi 10 octobre 2026
+     13|     expect(priceFor(salleA, "2026-10-10T09:00:00Z", "2026-10-10T11:00:…
+       |                                                                              ^
+     14|   });
+     15| 
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+ Test Files  2 failed (2)
+      Tests  2 failed | 7 passed (9)
+   Start at  09:47:33
+   Duration  585ms (transform 139ms, setup 0ms, collect 281ms, tests 75ms, environment 0ms, prepare 127ms)
+[exit=0]

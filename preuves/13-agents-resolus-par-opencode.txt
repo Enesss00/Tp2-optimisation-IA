@@ -1,0 +1,46 @@
+$ opencode --version; HOME=/tmp/claude-0/ochome opencode agent list 2>/dev/null | grep -E "^\S.*\((primary|subagent)\)"; echo; /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh
+1.18.35
+build (primary)
+compaction (primary)
+explore (subagent)
+general (subagent)
+plan (primary)
+summary (primary)
+title (primary)
+architect (primary)
+dev (subagent)
+explorer (subagent)
+finder (subagent)
+planner (primary)
+reviewer (subagent)
+tester (subagent)
+
+architect mode=primary  model=deepseek-v4-pro
+   outils actifs: question, bash, read, glob, grep, edit, write, task, webfetch, todowrite
+   edit: *=allow
+   bash: *=allow
+finder    mode=subagent model=deepseek-v4-flash
+   outils actifs: AUCUN
+   edit: *=deny
+   bash: -
+explorer  mode=subagent model=deepseek-v4-flash
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=allow
+   bash: *=deny git log*=allow git show*=allow git diff*=allow git blame*=allow ls*=allow find *=allow curl*=allow
+planner   mode=primary  model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/plans/*.md=allow
+   bash: *=deny git log*=allow git diff*=allow ls*=allow
+dev       mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write, task, webfetch, todowrite
+   edit: *=allow
+   bash: *=allow git push*=deny git reset --hard*=ask git clean*=ask rm -rf*=ask sudo*=deny curl * | *=ask
+reviewer  mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write
+   edit: *=allow
+   bash: *=deny git diff*=allow git log*=allow git show*=allow git status*=allow
+tester    mode=subagent model=deepseek-v4-flash
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/scratch/**=allow
+   bash: *=allow git commit*=deny git push*=deny git checkout*=deny git reset*=deny sudo*=deny
+[exit=0]

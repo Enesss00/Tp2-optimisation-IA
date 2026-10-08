@@ -1,0 +1,47 @@
+$ echo "## scripts/checks.sh avec le code actuel (2 bugs connus) :"; bash scripts/checks.sh >/tmp/claude-0/c.out 2>/tmp/claude-0/c.err; echo "exit=$?"; echo "--- stdout (ce que le plugin colle dans la sortie de l outil) :"; cat /tmp/claude-0/c.out; echo "--- stderr (jeté par le plugin, qui ne lit que res.stdout) :"; cat /tmp/claude-0/c.err
+echo; echo "## même script, avec une faute de type volontaire dans src/app.ts :"; cp src/app.ts /tmp/claude-0/app.bak; echo "export const x: number = \"texte\";" >> src/app.ts
+bash scripts/checks.sh >/tmp/claude-0/c.out 2>/tmp/claude-0/c.err; echo "exit=$?"; cat /tmp/claude-0/c.out; cp /tmp/claude-0/app.bak src/app.ts; git diff --quiet src/app.ts && echo "(faute annulée)"
+echo; echo "## commentaire de scripts/checks.sh vs config réelle :"; sed -n 2p scripts/checks.sh; grep -c "experimental\|hook" opencode.json
+## scripts/checks.sh avec le code actuel (2 bugs connus) :
+exit=0
+--- stdout (ce que le plugin colle dans la sortie de l outil) :
+--- typecheck
+--- lint
+--- tests
+
+ RUN  v2.1.9 /home/user/Tp2-optimisation-IA
+
+ ✓ test/overlap.spec.ts (6 tests | 4 skipped) 2ms
+ ✓ test/store.spec.ts (3 tests) 3ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed | 4 skipped (9)
+   Start at  10:02:22
+   Duration  321ms (transform 107ms, setup 0ms, collect 109ms, tests 6ms, environment 0ms, prepare 107ms)
+
+--- stderr (jeté par le plugin, qui ne lit que res.stdout) :
+
+## même script, avec une faute de type volontaire dans src/app.ts :
+exit=0
+--- typecheck
+src/app.ts(13,14): error TS2322: Type 'string' is not assignable to type 'number'.
+--- lint
+--- tests
+
+ RUN  v2.1.9 /home/user/Tp2-optimisation-IA
+
+ ✓ test/overlap.spec.ts (6 tests | 4 skipped) 3ms
+ ✓ test/store.spec.ts (3 tests) 4ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed | 4 skipped (9)
+   Start at  10:02:25
+   Duration  312ms (transform 74ms, setup 0ms, collect 86ms, tests 6ms, environment 0ms, prepare 120ms)
+
+--- au moins un check est rouge (voir plus haut)
+(faute annulée)
+
+## commentaire de scripts/checks.sh vs config réelle :
+# Checks post-ecriture. Branche dans opencode.json (experimental.hook.file_edited).
+0
+[exit=1]
