@@ -1,0 +1,10 @@
+$ opencode agent list | grep planner ; curl /experimental/tool (description de task : agents joignables)
+planner (subagent)
+- dev
+- explore
+- explorer
+- finder
+- general
+- planner
+- reviewer
+- tester
