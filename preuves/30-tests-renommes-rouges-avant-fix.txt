@@ -1,0 +1,15 @@
+$ npx vitest run 2>&1 | grep -E "✓|❯|×|→|Tests |Test Files"
+ ✓ test/overlap.spec.ts (6 tests | 4 skipped) 7ms
+ ❯ test/price.spec.ts (4 tests | 1 failed) 11ms
+   × priceFor > ajoute la majoration de week-end 9ms
+     → expected '5020' to be 70 // Object.is equality
+ ❯ test/bookings.spec.ts (5 tests | 1 failed) 96ms
+   × POST /bookings > accepte une reservation qui commence quand la precedente finit 18ms
+     → expected 409 to be 201 // Object.is equality
+ ✓ test/store.spec.ts (3 tests) 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ ❯ test/bookings.spec.ts:85:27
+ ❯ test/price.spec.ts:13:78
+ Test Files  2 failed | 2 passed (4)
+      Tests  2 failed | 12 passed | 4 skipped (18)
+[exit=0]
