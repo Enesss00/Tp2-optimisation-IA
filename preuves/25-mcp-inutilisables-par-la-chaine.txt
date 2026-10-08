@@ -1,0 +1,9 @@
+$ (copie jetable : modele gratuit, seul MCP actif = playwright)
+$ opencode run --agent <build|architect> "List the exact names of every tool available to you whose name contains playwright or browser. If none, answer NONE."
+== agent build (permissions par defaut : tout autorise)
+playwright_browser_click, playwright_browser_close, playwright_browser_console_messages, ... (liste tronquee, 25 outils)
+== agent architect ("*": deny puis liste blanche)
+NONE
+
+>>> Les 7 agents du depot commencent par "*": deny et n'autorisent aucun outil MCP : les MCP declares ne sont utilisables par aucun agent de la chaine.
+>>> (Constat par auto-declaration du modele, coherent avec la regle documentee d'OpenCode : la derniere regle qui correspond s'applique ; aucun motif ne vise les outils <mcp>_*.)

@@ -1,0 +1,13 @@
+$ HOME=/tmp/claude-0/ochome timeout 60 opencode mcp list 2>&1 | sed "s/\x1b\[[0-9;]*m//g"
+
+T  MCP Servers
+|
+•  ○ salles-db disabled
+|      https://mcp.internal.salles.lan/db
+|
+•  ○ github disabled
+|      npx -y @modelcontextprotocol/server-github
+|
+—  2 server(s)
+
+[exit=0]
