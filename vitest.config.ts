@@ -5,6 +5,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["test/**/*.spec.ts"],
-    environment: "node"
+    environment: "node",
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      // server.ts ne fait qu'appeler listen() : il est couvert par `npm start`, pas par les tests.
+      exclude: ["src/server.ts"],
+      reporter: ["text", "json-summary"],
+      thresholds: { statements: 90, branches: 90, functions: 90, lines: 90 }
+    }
   }
 });

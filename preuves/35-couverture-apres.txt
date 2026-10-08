@@ -1,0 +1,22 @@
+$ npm test 2>&1 | sed -n "/Test Files/,\$p" | grep -v "^$"
+ Test Files  5 passed (5)
+      Tests  40 passed | 1 skipped (41)
+   Start at  10:06:36
+   Duration  962ms (transform 244ms, setup 0ms, collect 518ms, tests 257ms, environment 1ms, prepare 475ms)
+ % Coverage report from v8
+--------------|---------|----------|---------|---------|-------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------|---------|----------|---------|---------|-------------------
+All files     |    98.8 |    96.07 |     100 |    98.8 |                   
+ src          |     100 |      100 |     100 |     100 |                   
+  app.ts      |     100 |      100 |     100 |     100 |                   
+  store.ts    |     100 |      100 |     100 |     100 |                   
+ src/lib      |     100 |      100 |     100 |     100 |                   
+  overlap.ts  |     100 |      100 |     100 |     100 |                   
+  price.ts    |     100 |      100 |     100 |     100 |                   
+  validate.ts |     100 |      100 |     100 |     100 |                   
+ src/routes   |   97.36 |     91.3 |     100 |   97.36 |                   
+  bookings.ts |   96.82 |       90 |     100 |   96.82 | 63-64             
+  rooms.ts    |     100 |      100 |     100 |     100 |                   
+--------------|---------|----------|---------|---------|-------------------
+[exit=0]
