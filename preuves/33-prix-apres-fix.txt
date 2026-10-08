@@ -1,0 +1,17 @@
+$ npx tsc --noEmit; echo "tsc exit=$?"; npx vitest run 2>&1 | grep -E "✓|×|→|Tests "; echo "--- et avant le fix (stash du code, tests gardés) :"; git stash push -q src/lib/price.ts; npx vitest run test/price.spec.ts test/bookings.spec.ts 2>&1 | grep -E "×|→|Tests "; git stash pop -q; git diff --stat src/lib/price.ts
+tsc exit=0
+ ✓ test/overlap.spec.ts (7 tests | 1 skipped) 5ms
+ ✓ test/price.spec.ts (4 tests) 6ms
+ ✓ test/bookings.spec.ts (6 tests) 92ms
+ ✓ test/store.spec.ts (3 tests) 4ms
+      Tests  19 passed | 1 skipped (20)
+--- et avant le fix (stash du code, tests gardés) :
+   × priceFor > ajoute la majoration de week-end 7ms
+     → expected '5020' to be 70 // Object.is equality
+   × POST /bookings — tarif > renvoie un prix numerique majore le week-end 9ms
+     → expected '3020' to be 50 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 8 passed (10)
+ src/lib/price.ts | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+[exit=0]

@@ -85,3 +85,18 @@ describe("POST /bookings", () => {
     expect(second.status).toBe(201);
   });
 });
+
+describe("POST /bookings — tarif", () => {
+  it("renvoie un prix numerique majore le week-end", async () => {
+    // samedi 14 novembre 2026, 2 h en salle-b (15 EUR/h) + 20 EUR de majoration
+    const res = await post({
+      roomId: "salle-b",
+      who: "moi",
+      people: 2,
+      startsAt: "2026-11-14T09:00:00Z",
+      endsAt: "2026-11-14T11:00:00Z"
+    });
+    expect(res.status).toBe(201);
+    expect((res.body as { booking: { price: number } }).booking.price).toBe(50);
+  });
+});
