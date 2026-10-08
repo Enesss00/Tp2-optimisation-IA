@@ -2,9 +2,15 @@
 
 API interne de reservation de salles.
 
+> **Rendu TP2 « le repo malade »** : le diagnostic complet est dans
+> [`DIAGNOSTIC.md`](DIAGNOSTIC.md) (22 problemes demontres et corriges, un commit par
+> probleme). Les captures avant/apres sont dans [`captures/`](captures/README.md), et les
+> sorties de toutes les commandes de preuve dans [`preuves/`](preuves/).
+
 ```bash
 npm install
 npm start          # http://localhost:3000
+npm run check      # typecheck + lint + tests (aussi lance par le hook pre-commit et la CI)
 ```
 
 ## Endpoints
@@ -31,7 +37,8 @@ curl -s -X POST localhost:3000/bookings \
 ## Outillage agent
 
 Le depot embarque une chaine d'agents OpenCode (`.opencode/`) : un agent principal
-`architect` et six subagents specialises. `opencode agent` les liste.
+`architect` et six subagents specialises (finder, explorer, planner, dev, reviewer,
+tester). `opencode agent list` les liste.
 
 ## Etat du projet
 

@@ -1,0 +1,13 @@
+# Run APRES : verification a la main du code livre par la chaine (copie jetable ~/tp2-apres)
+$ curl -s "localhost:3014/rooms/salle-b/availability?date=2026-11-20"   # dernier creneau libre renvoye
+{"startsAt":"2026-11-20T23:00:00Z","endsAt":"2026-11-20T24:00:00Z"}
+$ curl -s -X POST localhost:3014/bookings -d '{"roomId":"salle-b","who":"moi","people":2,"startsAt":"2026-11-20T23:00:00Z","endsAt":"2026-11-20T24:00:00Z"}'   # on reserve exactement ce creneau
+{"error":"date invalide : endsAt"} HTTP 400
+$ curl -s "localhost:3014/rooms/salle-b/availability?date=2026-02-30" | head -c 120
+{"slots":[{"startsAt":"2026-02-30T00:00:00Z","endsAt":"2026-02-30T01:00:00Z"},{"startsAt":"2026-02-30T01:00:00Z","endsAt
+$ curl -s -o /dev/null -w "%{http_code}" "localhost:3015/rooms/salle-b/availability?date=2026-02-30"
+200
+
+>>> 1) l endpoint renvoie un creneau qui finit a T24:00:00Z ; POST /bookings le refuse (400) : le dernier creneau "libre" est impossible a reserver
+>>> 2) le 30 fevrier est accepte (200)
+>>> le reviewer a rendu "VERDICT: NOTHING FOUND" et le tester n a rien signale (preuves/63)

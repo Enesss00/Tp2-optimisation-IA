@@ -7,7 +7,39 @@ Chaque correctif est un commit séparé, posé par-dessus.
 **Méthode.** Chaque problème ci-dessous a été **montré par une commande**, pas déduit d'une
 lecture. La commande exacte, sa sortie et son code de retour sont dans
 `preuves/NN-*.txt`. Les numéros 00 à 27 correspondent à l'état initial, 30 à 55 aux
-vérifications après correctif. Les numéros de ligne renvoient à la version d'origine.
+vérifications après correctif, 60 à 65 aux runs de la tâche de référence (transcriptions
+texte, plan et diff produits par la chaîne). Les numéros de ligne renvoient à la version
+d'origine. Les captures d'écran sont dans `captures/` (voir `captures/README.md`).
+
+## Synthèse
+
+22 problèmes démontrés et corrigés, un commit par problème. Le détail de chacun est plus
+bas.
+
+| # | Problème | Brique | Fichier en cause | Commit |
+|---|---|---|---|---|
+| P1 | la moitié des tests n'est jamais exécutée | tests | `test/*.test.ts` vs `vitest.config.ts:7` | `eed6c51` |
+| P2 | tests désactivés, assertions `expect(true)` | tests | `test/overlap.spec.ts:27,38-44` | `df34cec` |
+| P3 | test qui vérifie son propre double | tests | `test/store.spec.ts:5-8` | `dbbd9a7` |
+| P4 | couverture 21 %, mutation 4,4 %, aucun seuil | tests | `vitest.config.ts`, `package.json` | `51c3054`, `9d1ed9e` |
+| P5 | bug : réservations bout à bout refusées (409) | tests (bug caché) | `src/lib/overlap.ts:11` | `df34cec` |
+| P6 | bug : prix week-end `"5020"` (texte) | types + tests | `src/lib/price.ts:1,5` | `c9ade7d` |
+| P7 | bug : date `"1"` acceptée, réservation à 11 160 € | tests (bug caché) | `src/lib/validate.ts:16-22` | `1b212df` |
+| P8 | lint sans aucune règle | lint | `eslint.config.js:12` | `672be0b` |
+| P9 | TypeScript non strict | types | `tsconfig.json:8-10` | `3b688a3` |
+| P10 | hook pre-commit jamais branché | hooks (Git) | `.husky/pre-commit`, `package.json` | `387b814` |
+| P11 | hook post-écriture : stderr perdu, commentaire faux | hooks (OpenCode) | `.opencode/plugin/checks.js:15`, `scripts/checks.sh:2` | `d4d7c6c` |
+| P12 | `.env` versionné avec identifiants de recette | Git | `.env`, `.gitignore` | `c16598c` |
+| P13 | CI = lint vide, tests commentés, pas de typecheck | CI | `.github/workflows/ci.yml:18-19` | `3f85e9a` |
+| P14 | AGENTS.md cite des commandes absentes, état du code faux | rules | `AGENTS.md:12-13,20-23` | `853afd0` |
+| P15 | `finder` ne peut rien lire (`"*": deny` en dernier) | droits + subagents | `.opencode/agent/finder.md:15` | `8e3b402` |
+| P16 | `planner` injoignable (`mode: primary`) | subagents | `.opencode/agent/planner.md:3` | `3ebd740` |
+| P17 | architecte : tous les droits, prompt inversé, tester oublié | droits + subagents | `.opencode/agent/architect.md:16-19,23-24,32,40-46` | `fe3f652`, `7b3ec97` |
+| P18 | le reviewer corrige ce qu'il relit | droits | `.opencode/agent/reviewer.md:2,14,72-74` | `dd1130a` |
+| P19 | `dev` lance d'autres `dev` | droits + subagents | `.opencode/agent/dev.md:16,44-46` | `9a66964` |
+| P20 | `explorer` peut écrire partout | droits | `.opencode/agent/explorer.md:15` | `e18522c` |
+| P21 | `/ship` pousse sans checks ni relecture | commands | `.opencode/command/ship.md:8-14` | `c308ec4` |
+| P22 | 6 MCP, 3 en échec, inutilisables, ~27 000 tokens | MCP + contexte | `opencode.json:6-55` | `ed9e448` |
 
 Outils utilisés pour l'audit :
 - `opencode` 1.18.35 : `opencode agent list`, `opencode debug agent <nom>` (permissions
@@ -54,6 +86,13 @@ les créneaux libres d'une salle sur la journée demandée, avec ses tests. »
 Les deux runs utilisent OpenCode 1.18.35, une session neuve et la chaîne du dépôt telle
 quelle. Seul le modèle diffère du dépôt : `nemotron-3-ultra-free`, gratuit, dans les
 deux cas. Captures : `captures/avant-04` à `06` et `captures/apres-04` à `06`.
+Transcriptions texte complètes : `preuves/60` (avant), `preuves/63` (après) ; code
+produit : `preuves/61` (diff avant), `preuves/64` (plan et diff après).
+
+Le code produit par la chaîne (endpoint `/availability`, ses tests, le plan) est resté
+dans des **copies jetables** du dépôt et n'est **pas commité ici**. C'est voulu : le sujet
+demande d'observer la chaîne sur cette tâche, pas de livrer l'endpoint, et le code
+produit a des défauts (voir ci-dessous).
 
 | Observation | AVANT (`ab57521`) | APRÈS (session neuve, `7b3ec97`) |
 |---|---|---|
@@ -64,10 +103,11 @@ deux cas. Captures : `captures/avant-04` à `06` et `captures/apres-04` à `06`.
 | Le pire | l'agent constate que `overlaps` bloque les créneaux bout à bout (« due to `<=` ») et **change l'attente de son test pour qu'il passe avec le bug** (22 → 20 créneaux), puis annonce « Done! » | voir « Ce qui reste faible » |
 | Droits | l'architecte écrit et lance tout | l'architecte tente `npm start &`, **refusé** par ses permissions ; c'est `tester` qui pilote l'app |
 | Vérification finale | `npm run test:unit`, lancé par l'agent lui-même sur un filet troué | `npm run check` vert (68 tests, couverture 99 %), verdict du reviewer cité dans le message final |
-| Ce qui reste faible | — | Vérifié à la main (`captures/apres-06`) : le code livré **accepte le 30 février** et renvoie des fins de créneau `T24:00:00Z`. Le reviewer a pourtant rendu « NOTHING FOUND » et le tester n'a rien signalé. La structure est réparée, mais un verdict de subagent reste une affirmation. Sur ce run, le modèle était un petit modèle gratuit, pas le `deepseek-v4-pro` prévu pour le reviewer. |
+| Ce qui reste faible | — | Vérifié à la main (`captures/apres-06`, `preuves/65`) : le code livré **accepte le 30 février** (200), et le dernier créneau « libre » finit à `T24:00:00Z`. `POST /bookings` refuse de le réserver (400, `date invalide : endsAt`), et les tests écrits par `dev` **exigent** cette valeur invalide (`preuves/64`). Le reviewer a pourtant rendu « NOTHING FOUND » et le tester n'a rien signalé. La structure est réparée, mais un verdict de subagent reste une affirmation à vérifier. Sur ce run, le modèle était un petit modèle gratuit, pas le `deepseek-v4-pro` prévu pour le reviewer. |
 
-Historique : un premier run « après » avait délégué à planner et dev mais sauté reviewer et
-tester (il avait aussi été coupé par la limite de 15 min de mon environnement). Le commit
+Historique : un premier run « après » (`preuves/62`) avait délégué à planner et dev mais
+sauté reviewer et tester (il avait aussi été coupé par la limite de 15 min de mon
+environnement). Le commit
 `7b3ec97` rend l'étape Verify obligatoire dans le prompt de l'architecte ; le run ci-dessus
 est celui d'après ce commit.
 
@@ -309,7 +349,10 @@ Tableau résolu par OpenCode (`opencode debug agent <nom>`, preuve `13`) :
   `task` limité aux 6 subagents du dépôt. Prompt : « should be answered by a subagent »,
   `tester` ajouté à l'équipe et à l'étape Verify, échec de subagent à signaler. La nuance
   « pour 2-3 appels d'outils, fais-le toi-même » est conservée : elle ne concerne plus que
-  la lecture.
+  la lecture. Complété par `7b3ec97` après un run réel où l'architecte sautait encore
+  reviewer et tester (`preuves/62`) : l'étape Verify impose les deux appels après toute
+  modification par `dev`, et le message final doit citer le verdict du reviewer
+  (`preuves/63` : appliqué).
 
 #### P18 — Le reviewer corrige ce qu'il relit
 - **Brique** : droits.

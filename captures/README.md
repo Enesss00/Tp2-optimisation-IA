@@ -20,6 +20,8 @@
   après), et rien d'autre n'a changé. La chaîne d'agents, les permissions, les hooks et
   les MCP sont ceux du dépôt.
 - **CI** : capture de la vraie page GitHub Actions du dépôt.
+- **Version texte** : les transcriptions complètes des runs de la tâche sont dans
+  `preuves/60` à `65` (lisibles sans les images).
 
 ## Tâche de référence
 
@@ -53,3 +55,28 @@
 | `avant-15-mutation.png` | `apres-08-mutation.png` | score de mutation 4,4 % → 92 % |
 | `avant-14-ship.png` | — | `/ship` : `git add -A` + `git push` sans checks, architecte `bash "*": allow` |
 | — | `apres-13-git-log.png` | un commit par problème |
+
+## Rejouer la tâche de référence (protocole)
+
+```bash
+# AVANT : clone du dépôt d'origine. Ne pas utiliser le dépôt de rendu :
+# l'ancien /ship fait un git push sans demander.
+git clone https://github.com/0xaitox/ai-tools-repo-malade ~/tp2-avant
+cd ~/tp2-avant && npm install && opencode
+
+# APRÈS : ce dépôt
+cd ~/Tp2-optimisation-IA && npm install && opencode
+```
+
+Dans chaque cas : une session neuve, l'agent par défaut (`architect`), et le prompt ci-dessus
+collé tel quel, sans aide.
+
+Points à observer :
+- qui travaille et qui ne travaille jamais (cartes `task` : Planner, Dev, Tester,
+  Reviewer) ;
+- qui écrit quoi : avant, l'architecte édite lui-même ; après, seul `dev` modifie le code ;
+- ce qui échoue en silence : le bloc « checks post-écriture », `npm test` (absent avant),
+  un test aligné sur un bug ;
+- la présence d'un plan dans `.opencode/plans/` ;
+- à la fin : `git status`, `npm run check` (après) ou `npm run test:unit` (avant), et une
+  vérification à la main avec `curl` (voir `preuves/65`).

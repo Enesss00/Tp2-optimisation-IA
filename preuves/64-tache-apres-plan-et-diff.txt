@@ -1,0 +1,363 @@
+# Run APRES definitif : plan ecrit par planner (.opencode/plans/rooms-availability.md) puis diff produit par dev
+# (copie jetable, non commite dans ce depot : le sujet demande d'observer la chaine, pas de livrer l'endpoint)
+
+=================== .opencode/plans/rooms-availability.md
+# Add GET /rooms/:id/availability endpoint
+
+## Goal
+Implement `GET /rooms/:id/availability?date=YYYY-MM-DD` that returns hourly free time slots for a room on a given date (00:00–24:00 UTC), with 404 for unknown room and 400 for missing/invalid date.
+
+## Non-goals
+- No changes to `src/store.ts` data structures (it will be replaced by INFRA-140)
+- No persistence, no authentication, no rate limiting
+- No timezone support beyond UTC (dates are always UTC)
+
+## Assumptions and open questions
+- BLOCKING: Should the response format be `{ slots: { startsAt, endsAt }[] }` or `{ available: [...] }`? **Assumption:** use `{ slots: { startsAt: string, endsAt: string }[] }` for consistency with booking payloads.
+- BLOCKING: Should slots that are partially booked be excluded entirely, or split? **Assumption:** hourly granularity — a slot is either fully free (no overlap with any booking) or not returned. Since bookings can start/end at any minute, a 1-hour slot is free only if no booking overlaps it at all.
+- assumption: Day boundaries are 00:00:00Z to 24:00:00Z (exclusive) of the given date. A booking at 23:30–00:30 next day overlaps the 23:00–24:00 slot of the first day.
+- assumption: Validation follows existing pattern — `ValidationError` thrown and caught in route (legacy style), since migrating to `Result` is out of scope for this endpoint.
+
+## Files to touch
+| File | Change | Why |
+|---|---|---|
+| `src/routes/rooms.ts` | Add `GET /:id/availability` route with validation, room lookup, availability computation, response | Main implementation |
+| `src/lib/availability.ts` | New module: `computeAvailability(roomId, date, bookings)` pure function returning free hourly slots | Separation of concerns, testable in isolation |
+| `test/rooms.spec.ts` | Add tests for the new endpoint (success, 404, 400, edge cases) | Verify behavior |
+| `test/availability.spec.ts` | New file: unit tests for `computeAvailability` | Test pure logic thoroughly |
+
+## Steps
+### 1. Create `src/lib/availability.ts` with `computeAvailability` function
+- What: Pure function that takes `roomId: string`, `date: string` (YYYY-MM-DD), `bookings: Booking[]` and returns `{ startsAt: string, endsAt: string }[]` of free hourly slots for that day (00:00–24:00 UTC)
+- Where: `src/lib/availability.ts` (new file)
+- Done when: `npm run typecheck` passes and `npm test` runs new unit tests in `test/availability.spec.ts` (created in step 3)
+
+### 2. Add `GET /:id/availability` route in `src/routes/rooms.ts`
+- What: Import `computeAvailability`, `bookingsForRoom`, `findRoom`. Validate `date` query param (required, YYYY-MM-DD regex). Return 404 if room not found. Return 400 if date missing/invalid. Compute and return `{ slots: [...] }`.
+- Where: `src/routes/rooms.ts` (append after existing routes)
+- Done when: `npm run typecheck` passes, manual `curl` test returns expected JSON for known room/date
+
+### 3. Add unit tests for `computeAvailability` in `test/availability.spec.ts`
+- What: Test cases: empty bookings → 24 slots; bookings covering full day → 0 slots; bookings at boundaries (00:00, 23:00); partial overlaps; multiple bookings with gaps; bookings spanning midnight
+- Where: `test/availability.spec.ts` (new file)
+- Done when: `npm test` passes with new tests, coverage threshold met
+
+### 4. Add integration tests for `GET /rooms/:id/availability` in `test/rooms.spec.ts`
+- What: Test cases: 200 with slots for salle-a on 2026-10-05 (has bk-1001 09:00–11:00); 404 for unknown room; 400 for missing date; 400 for invalid date format; 200 with all 24 slots for room with no bookings that day
+- Where: `test/rooms.spec.ts` (append new `describe` block)
+- Done when: `npm test` passes, all new tests green
+
+## How this is verified
+- Unit tests (`test/availability.spec.ts`): 10+ cases covering boundaries, overlaps, midnight-spanning bookings, empty/full days
+- Integration tests (`test/rooms.spec.ts`): 5+ HTTP cases via `call()` helper — 200, 404, 400 (missing), 400 (invalid), 200 (no bookings)
+- Run `npm run check` (typecheck + lint + tests) — must pass before commit
+- Manual verification:
+  ```bash
+  curl "http://localhost:3000/rooms/salle-a/availability?date=2026-10-05"
+  # Expect: 22 slots (00-09, 11-24) since bk-1001 occupies 09-11
+  curl "http://localhost:3000/rooms/unknown/availability?date=2026-10-05"
+  # Expect: 404 { error: "salle inconnue" }
+  curl "http://localhost:3000/rooms/salle-a/availability"
+  # Expect: 400 { error: "champ manquant ou vide : date" }
+  ```
+
+## Risks and rollback
+- Risk: `computeAvailability` logic errors at day boundaries (midnight). Mitigation: exhaustive unit tests for bookings starting/ending at 00:00 and 24:00.
+- Risk: Date parsing inconsistency (UTC vs local). Mitigation: all dates constructed as `new Date(`${date}T00:00:00Z`)` and `new Date(`${date}T24:00:00Z`)` — explicit UTC.
+- Rollback: Revert the three files (`src/routes/rooms.ts`, `src/lib/availability.ts`, `test/rooms.spec.ts`) and delete `test/availability.spec.ts`. No store migration needed.
+=================== diff
+diff --git a/src/lib/availability.ts b/src/lib/availability.ts
+new file mode 100644
+index 0000000..42d0986
+--- /dev/null
++++ b/src/lib/availability.ts
+@@ -0,0 +1,28 @@
++import type { Booking } from "../store.js";
++import { overlaps } from "./overlap.js";
++
++export default function computeAvailability(
++  roomId: string,
++  date: string,
++  bookings: Booking[]
++): { startsAt: string; endsAt: string }[] {
++  const roomBookings = bookings.filter((b) => b.roomId === roomId);
++  const freeSlots: { startsAt: string; endsAt: string }[] = [];
++
++  for (let hour = 0; hour < 24; hour += 1) {
++    const startHour = hour.toString().padStart(2, "0");
++    const endHour = (hour + 1).toString().padStart(2, "0");
++    const slotStart = `${date}T${startHour}:00:00Z`;
++    const slotEnd = `${date}T${endHour}:00:00Z`;
++
++    const hasOverlap = roomBookings.some((booking) =>
++      overlaps(slotStart, slotEnd, booking.startsAt, booking.endsAt)
++    );
++
++    if (!hasOverlap) {
++      freeSlots.push({ startsAt: slotStart, endsAt: slotEnd });
++    }
++  }
++
++  return freeSlots;
++}
+\ No newline at end of file
+diff --git a/src/routes/rooms.ts b/src/routes/rooms.ts
+index 7b502b6..1e0ee04 100644
+--- a/src/routes/rooms.ts
++++ b/src/routes/rooms.ts
+@@ -1,5 +1,6 @@
+ import { Router } from "express";
+-import { rooms, findRoom, bookingsForRoom } from "../store.js";
++import { rooms, bookings, findRoom, bookingsForRoom } from "../store.js";
++import computeAvailability from "../lib/availability.js";
+ 
+ export const roomsRouter = Router();
+ 
+@@ -15,3 +16,24 @@ roomsRouter.get("/:id", (req, res) => {
+   }
+   res.json({ room, bookings: bookingsForRoom(room.id) });
+ });
++
++roomsRouter.get("/:id/availability", (req, res) => {
++  const date = req.query.date as string | undefined;
++  if (!date || date.trim() === "") {
++    res.status(400).json({ error: "champ manquant ou vide : date" });
++    return;
++  }
++  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
++    res.status(400).json({ error: "date invalide : date" });
++    return;
++  }
++
++  const room = findRoom(req.params.id);
++  if (!room) {
++    res.status(404).json({ error: "salle inconnue" });
++    return;
++  }
++
++  const slots = computeAvailability(room.id, date, bookings);
++  res.json({ slots });
++});
+diff --git a/test/availability.spec.ts b/test/availability.spec.ts
+new file mode 100644
+index 0000000..5d183aa
+--- /dev/null
++++ b/test/availability.spec.ts
+@@ -0,0 +1,161 @@
++import { describe, it, expect } from "vitest";
++import computeAvailability from "../src/lib/availability.js";
++import type { Booking } from "../src/store.js";
++
++const date = "2026-10-05";
++
++function makeBooking(overrides: Partial<Booking> = {}): Booking {
++  return {
++    id: "bk-test",
++    roomId: "salle-a",
++    who: "test",
++    people: 5,
++    startsAt: "2026-10-05T09:00:00Z",
++    endsAt: "2026-10-05T10:00:00Z",
++    price: 25,
++    ...overrides,
++  };
++}
++
++describe("computeAvailability", () => {
++  it("empty bookings → 24 slots (00:00–24:00)", () => {
++    const slots = computeAvailability("salle-a", date, []);
++    expect(slots).toHaveLength(24);
++    expect(slots[0]).toEqual({ startsAt: "2026-10-05T00:00:00Z", endsAt: "2026-10-05T01:00:00Z" });
++    expect(slots[23]).toEqual({ startsAt: "2026-10-05T23:00:00Z", endsAt: "2026-10-05T24:00:00Z" });
++  });
++
++  it("bookings covering full day → 0 slots", () => {
++    const bookings: Booking[] = [];
++    for (let h = 0; h < 24; h += 1) {
++      const start = h.toString().padStart(2, "0");
++      const end = (h + 1).toString().padStart(2, "0");
++      bookings.push(makeBooking({
++        id: `bk-${h}`,
++        startsAt: `2026-10-05T${start}:00:00Z`,
++        endsAt: `2026-10-05T${end}:00:00Z`,
++      }));
++    }
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(0);
++  });
++
++  it("booking at start of day (00:00–01:00) → 23 slots (01:00–24:00)", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T00:00:00Z",
++      endsAt: "2026-10-05T01:00:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(23);
++    expect(slots[0]).toEqual({ startsAt: "2026-10-05T01:00:00Z", endsAt: "2026-10-05T02:00:00Z" });
++    expect(slots[22]).toEqual({ startsAt: "2026-10-05T23:00:00Z", endsAt: "2026-10-05T24:00:00Z" });
++  });
++
++  it("booking at end of day (23:00–24:00) → 23 slots (00:00–23:00)", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T23:00:00Z",
++      endsAt: "2026-10-05T24:00:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(23);
++    expect(slots[0]).toEqual({ startsAt: "2026-10-05T00:00:00Z", endsAt: "2026-10-05T01:00:00Z" });
++    expect(slots[22]).toEqual({ startsAt: "2026-10-05T22:00:00Z", endsAt: "2026-10-05T23:00:00Z" });
++  });
++
++  it("booking in middle (09:00–11:00) → 22 slots (00:00–09:00, 11:00–24:00)", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T09:00:00Z",
++      endsAt: "2026-10-05T11:00:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(22);
++    // First 9 slots (00:00-09:00)
++    expect(slots[0]).toEqual({ startsAt: "2026-10-05T00:00:00Z", endsAt: "2026-10-05T01:00:00Z" });
++    expect(slots[8]).toEqual({ startsAt: "2026-10-05T08:00:00Z", endsAt: "2026-10-05T09:00:00Z" });
++    // Next slots start at 11:00
++    expect(slots[9]).toEqual({ startsAt: "2026-10-05T11:00:00Z", endsAt: "2026-10-05T12:00:00Z" });
++    expect(slots[21]).toEqual({ startsAt: "2026-10-05T23:00:00Z", endsAt: "2026-10-05T24:00:00Z" });
++  });
++
++  it("multiple bookings with gaps → correct free slots", () => {
++    const bookings: Booking[] = [
++      makeBooking({ id: "bk-1", startsAt: "2026-10-05T02:00:00Z", endsAt: "2026-10-05T04:00:00Z" }),
++      makeBooking({ id: "bk-2", startsAt: "2026-10-05T06:00:00Z", endsAt: "2026-10-05T07:00:00Z" }),
++      makeBooking({ id: "bk-3", startsAt: "2026-10-05T20:00:00Z", endsAt: "2026-10-05T22:00:00Z" }),
++    ];
++    const slots = computeAvailability("salle-a", date, bookings);
++    // 24 - (2 + 1 + 2) = 19 free slots
++    expect(slots).toHaveLength(19);
++    // Check gaps are preserved
++    expect(slots.some(s => s.startsAt === "2026-10-05T00:00:00Z")).toBe(true);
++    expect(slots.some(s => s.startsAt === "2026-10-05T04:00:00Z")).toBe(true);
++    expect(slots.some(s => s.startsAt === "2026-10-05T07:00:00Z")).toBe(true);
++    expect(slots.some(s => s.startsAt === "2026-10-05T22:00:00Z")).toBe(true);
++  });
++
++  it("booking spanning midnight (23:30–00:30 next day) → overlaps 23:00–24:00 slot of first day", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T23:30:00Z",
++      endsAt: "2026-10-06T00:30:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    // The 23:00-24:00 slot should be removed due to overlap
++    expect(slots).toHaveLength(23);
++    expect(slots.some(s => s.startsAt === "2026-10-05T23:00:00Z")).toBe(false);
++    // 00:00-01:00 of next day is not in scope for this date
++    expect(slots[0]).toEqual({ startsAt: "2026-10-05T00:00:00Z", endsAt: "2026-10-05T01:00:00Z" });
++  });
++
++  it("booking exactly at slot boundary (09:00–10:00) → only that slot removed", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T09:00:00Z",
++      endsAt: "2026-10-05T10:00:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(23);
++    expect(slots.some(s => s.startsAt === "2026-10-05T09:00:00Z")).toBe(false);
++    // Adjacent slots should remain
++    expect(slots.some(s => s.startsAt === "2026-10-05T08:00:00Z")).toBe(true);
++    expect(slots.some(s => s.startsAt === "2026-10-05T10:00:00Z")).toBe(true);
++  });
++
++  it("partial overlap (09:30–10:30) → both 09:00–10:00 and 10:00–11:00 slots removed", () => {
++    const bookings = [makeBooking({
++      id: "bk-1",
++      startsAt: "2026-10-05T09:30:00Z",
++      endsAt: "2026-10-05T10:30:00Z",
++    })];
++    const slots = computeAvailability("salle-a", date, bookings);
++    expect(slots).toHaveLength(22);
++    expect(slots.some(s => s.startsAt === "2026-10-05T09:00:00Z")).toBe(false);
++    expect(slots.some(s => s.startsAt === "2026-10-05T10:00:00Z")).toBe(false);
++    // Other slots should remain
++    expect(slots.some(s => s.startsAt === "2026-10-05T08:00:00Z")).toBe(true);
++    expect(slots.some(s => s.startsAt === "2026-10-05T11:00:00Z")).toBe(true);
++  });
++
++  it("bookings for different room → should not affect availability (filter by roomId)", () => {
++    const bookings: Booking[] = [
++      makeBooking({ id: "bk-1", roomId: "salle-a", startsAt: "2026-10-05T09:00:00Z", endsAt: "2026-10-05T11:00:00Z" }),
++      makeBooking({ id: "bk-2", roomId: "amphi", startsAt: "2026-10-05T09:00:00Z", endsAt: "2026-10-05T11:00:00Z" }),
++      makeBooking({ id: "bk-3", roomId: "salle-b", startsAt: "2026-10-05T09:00:00Z", endsAt: "2026-10-05T11:00:00Z" }),
++    ];
++    // Query for salle-a: only bk-1 should affect availability
++    const slotsA = computeAvailability("salle-a", date, bookings);
++    expect(slotsA).toHaveLength(22);
++    // Query for amphi: only bk-2 should affect availability
++    const slotsAmphi = computeAvailability("amphi", date, bookings);
++    expect(slotsAmphi).toHaveLength(22);
++    // Query for salle-b: only bk-3 should affect availability
++    const slotsB = computeAvailability("salle-b", date, bookings);
++    expect(slotsB).toHaveLength(22);
++    // Query for labo (no bookings): all 24 slots free
++    const slotsLabo = computeAvailability("labo", date, bookings);
++    expect(slotsLabo).toHaveLength(24);
++  });
++});
+\ No newline at end of file
+diff --git a/test/rooms.spec.ts b/test/rooms.spec.ts
+index 3a48a0d..fdd55da 100644
+--- a/test/rooms.spec.ts
++++ b/test/rooms.spec.ts
+@@ -34,3 +34,50 @@ describe("GET /rooms/:id", () => {
+     expect(res.body.error).toBe("salle inconnue");
+   });
+ });
++
++describe("GET /rooms/:id/availability", () => {
++  it("renvoie 22 creneaux pour salle-a le 2026-10-05 (bk-1001 09:00-11:00)", async () => {
++    const res = await call("/rooms/salle-a/availability?date=2026-10-05");
++    expect(res.status).toBe(200);
++    const slots = res.body.slots as { startsAt: string; endsAt: string }[];
++    expect(slots.length).toBe(22);
++  });
++
++  it("renvoie 404 pour une salle inconnue", async () => {
++    const res = await call("/rooms/cave/availability?date=2026-10-05");
++    expect(res.status).toBe(404);
++    expect(res.body.error).toBe("salle inconnue");
++  });
++
++  it("renvoie 400 si le parametre date est manquant", async () => {
++    const res = await call("/rooms/salle-a/availability");
++    expect(res.status).toBe(400);
++    expect(res.body.error).toBe("champ manquant ou vide : date");
++  });
++
++  it("renvoie 400 pour un format de date invalide (2026/10/05)", async () => {
++    const res = await call("/rooms/salle-a/availability?date=2026/10/05");
++    expect(res.status).toBe(400);
++    expect(res.body.error).toBe("date invalide : date");
++  });
++
++  it("renvoie 400 pour un format de date invalide (invalid)", async () => {
++    const res = await call("/rooms/salle-a/availability?date=invalid");
++    expect(res.status).toBe(400);
++    expect(res.body.error).toBe("date invalide : date");
++  });
++
++  it("renvoie 24 creneaux pour labo le 2026-10-05 (aucune reservation)", async () => {
++    const res = await call("/rooms/labo/availability?date=2026-10-05");
++    expect(res.status).toBe(200);
++    const slots = res.body.slots as { startsAt: string; endsAt: string }[];
++    expect(slots.length).toBe(24);
++  });
++
++  it("renvoie 21 creneaux pour amphi le 2026-10-06 (bk-1002 14:00-17:00)", async () => {
++    const res = await call("/rooms/amphi/availability?date=2026-10-06");
++    expect(res.status).toBe(200);
++    const slots = res.body.slots as { startsAt: string; endsAt: string }[];
++    expect(slots.length).toBe(21);
++  });
++});
