@@ -30,7 +30,8 @@
 | `avant-06-tache-test-aligne-sur-le-bug.png` | Il voit que `overlaps` bloque les créneaux bout à bout (« due to `<=` »), **modifie l'attente de son test** pour qu'il passe avec le bug (22 → 20 créneaux) et conclut « Done! ». Le bug est maintenant verrouillé par un test. Pas de plan, pas de relecture, pas de tester. |
 | `apres-04-tache-delegation.png` | L'architecte lit, puis **délègue** : `Planner Agent` écrit le plan, puis `Dev Agent` réalise les étapes une par une. Ce premier run a été coupé par la limite de 15 min de mon environnement, puis repris dans la même session (`--session … "continue"`). |
 | `apres-05-tache-plan.png` | Le plan écrit par `planner` dans `.opencode/plans/availability-endpoint.md` : objectifs, hors périmètre, hypothèses, étapes avec « Done when », cas limites, et notamment « booking at slot boundary → half-open intervals ». |
-| `apres-06-tache-fin.png` | La fin du run repris : tests ajoutés, vérification et rapport final de l'architecte. |
+| `apres-06-tache-fin.png` | Fin du run repris. Le **seuil de couverture** attrape du code mort dans la route, et l'architecte **délègue** la simplification à `Dev Agent` au lieu de la faire lui-même. Il tente `npm start &` : **refusé par ses permissions** (règles affichées). Il relance `npm run check` (vert, 98,26 %) avant de conclure. |
+| `apres-06b-tache-resultat.png` | Le résultat vérifié à la main : `npm run check` vert (61 tests). Sur l'API réelle, la réservation de 09:00 à 11:00 rend 09h et 10h « PRIS » et 11h « libre » (le bout à bout fonctionne). 30 février → 400, salle inconnue → 404. |
 
 ## Briques du harness
 
