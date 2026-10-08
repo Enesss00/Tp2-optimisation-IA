@@ -19,6 +19,7 @@ describe("priceFor", () => {
 
   it("reconnait le week-end", () => {
     expect(isWeekend("2026-10-10T09:00:00Z")).toBe(true);
+    expect(isWeekend("2026-10-11T09:00:00Z")).toBe(true); // dimanche
     expect(isWeekend("2026-10-05T09:00:00Z")).toBe(false);
   });
 });

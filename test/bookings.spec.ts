@@ -18,6 +18,7 @@ describe("POST /bookings", () => {
       endsAt: "2026-11-02T10:00:00Z"
     });
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe("salle inconnue : cave");
   });
 
   it("refuse un depassement de capacite", async () => {
@@ -29,6 +30,7 @@ describe("POST /bookings", () => {
       endsAt: "2026-11-02T10:00:00Z"
     });
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe("capacite depassee : 40 > 6");
   });
 
   it("refuse une date invalide", async () => {
@@ -126,7 +128,7 @@ describe("POST /bookings — validation", () => {
       endsAt: "2026-10-05T12:00:00Z"
     });
     expect(res.status).toBe(409);
-    expect(res.body.conflictsWith).toBe("bk-1001");
+    expect(res.body).toEqual({ error: "creneau deja reserve", conflictsWith: "bk-1001" });
   });
 
   it("enregistre la reservation creee avec son prix", async () => {

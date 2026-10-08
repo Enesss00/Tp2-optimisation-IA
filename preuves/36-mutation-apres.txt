@@ -1,0 +1,13 @@
+$ npm run test:mutation 2>&1 | sed "s/\x1b\[[0-9;]*m//g" | grep -E "% Mutation|^File|^All files|^ *[a-z]+\.ts *\||Final mutation"
+              | % Mutation score |          |           |            |          |          |
+File          |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+All files     |  92.27 |   92.27 |      167 |         0 |         14 |        0 |        0 |
+  overlap.ts  | 100.00 |  100.00 |       10 |         0 |          0 |        0 |        0 |
+  price.ts    | 100.00 |  100.00 |       17 |         0 |          0 |        0 |        0 |
+  validate.ts |  96.97 |   96.97 |       32 |         0 |          1 |        0 |        0 |
+  bookings.ts |  95.16 |   95.16 |       59 |         0 |          3 |        0 |        0 |
+  rooms.ts    |  91.67 |   91.67 |       11 |         0 |          1 |        0 |        0 |
+ app.ts       | 100.00 |  100.00 |        7 |         0 |          0 |        0 |        0 |
+ store.ts     |  77.50 |   77.50 |       31 |         0 |          9 |        0 |        0 |
+10:09:19 (14611) INFO MutationTestReportHelper Final mutation score of 92.27 is greater than or equal to break threshold 70
+[exit=0]
