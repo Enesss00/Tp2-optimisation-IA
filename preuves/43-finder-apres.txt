@@ -1,0 +1,6 @@
+$ /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh | grep -A3 "^finder"
+finder    mode=subagent model=deepseek-v4-flash
+   outils actifs: read, glob, grep
+   edit: *=deny
+   bash: -
+[exit=0]
