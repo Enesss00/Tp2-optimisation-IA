@@ -1,0 +1,43 @@
+$ B=7afa9bd
+echo "## commandes annoncées par AGENTS.md (version d origine) :"; git show $B:AGENTS.md | grep -n "npm"
+echo "## scripts réellement présents dans package.json d origine :"; git show $B:package.json | node -e "let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>console.log(Object.keys(JSON.parse(s).scripts).join(\", \")))"
+echo "=> npm test et npm run build n existent pas (cf. preuves/00), dist/ jamais produit (noEmit: true) :"; git show $B:tsconfig.json | grep noEmit
+echo; echo "## convention 2 « jamais de throw, Result » vs code :"; git show $B:AGENTS.md | sed -n 20,23p; git grep -n "throw\|try {\|catch (" $B -- src | sed "s/^$B://"; git grep -c "ok: true\|ok: false" $B -- src || echo "aucun Result { ok } dans src"
+echo; echo "## convention 1 « toute fonction exportée porte une JSDoc » vs code (hors src/lib, couvert par sa règle locale) :"; for f in src/store.ts src/app.ts; do git show $B:$f | grep -B1 "^export function" | grep -v "^--"; done
+## commandes annoncées par AGENTS.md (version d origine) :
+10:| `npm install` | installe les dependances |
+11:| `npm start` | demarre l'API sur le port 3000 |
+12:| `npm test` | lance la suite de tests — **a lancer avant tout commit** |
+13:| `npm run build` | compile dans `dist/` |
+14:| `npm run lint` | verifie le style et les erreurs courantes |
+## scripts réellement présents dans package.json d origine :
+start, dev, test:unit, lint, typecheck
+=> npm test et npm run build n existent pas (cf. preuves/00), dist/ jamais produit (noEmit: true) :
+    "noEmit": true,
+
+## convention 2 « jamais de throw, Result » vs code :
+2. **Les erreurs remontent en `Result`, jamais en `throw`.** Une fonction qui peut
+   echouer renvoie `{ ok: true, value }` ou `{ ok: false, error }`. Cette convention est
+   la regle du depot depuis la refonte de mars : on ne veut plus de `try/catch` disperses
+   dans les routes.
+src/lib/validate.ts:11:    throw new ValidationError(`champ manquant ou vide : ${field}`);
+src/lib/validate.ts:19:    throw new ValidationError(`date invalide : ${field}`);
+src/lib/validate.ts:27:    throw new ValidationError(`entier positif attendu : ${field}`);
+src/routes/bookings.ts:19:  try {
+src/routes/bookings.ts:28:      throw new ValidationError("endsAt doit etre posterieur a startsAt");
+src/routes/bookings.ts:33:      throw new ValidationError(`salle inconnue : ${roomId}`);
+src/routes/bookings.ts:36:      throw new ValidationError(`capacite depassee : ${people} > ${room.capacity}`);
+src/routes/bookings.ts:58:  } catch (err) {
+src/routes/bookings.ts:63:    throw err;
+7afa9bd:src/app.ts:1   (= la reponse de /health { ok: true }, pas un Result : aucune fonction ne renvoie { ok, value | error })
+
+## convention 1 « toute fonction exportée porte une JSDoc » vs code (hors src/lib, couvert par sa règle locale) :
+
+export function nextBookingId(): string {
+
+export function findRoom(id: string): Room | undefined {
+
+export function bookingsForRoom(roomId: string): Booking[] {
+
+export function createApp() {
+[exit=0]
