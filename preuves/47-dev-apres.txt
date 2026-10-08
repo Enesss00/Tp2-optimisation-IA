@@ -1,0 +1,6 @@
+$ /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh 2>&1 | grep -A3 "^dev"
+dev       mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write, webfetch, todowrite
+   edit: *=allow
+   bash: *=allow git push*=deny git reset --hard*=ask git clean*=ask rm -rf*=ask sudo*=deny curl * | *=ask
+[exit=0]
