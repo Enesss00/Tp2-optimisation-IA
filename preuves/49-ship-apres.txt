@@ -1,8 +1,5 @@
----
-description: Prepare la livraison du travail en cours (checks, relecture, commit) — sans pousser
-agent: architect
----
-
+$ export HOME=/tmp/claude-0/ochome; (timeout 40 opencode serve --port 4099 >/dev/null 2>&1 &); sleep 7; curl -s localhost:4099/command | node -e "let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{for(const c of JSON.parse(s)) if(c.name===\"ship\") console.log(\"/ship -> agent:\",c.agent,\"\\n\"+c.template)})"
+/ship -> agent: architect 
 Prepare la livraison du travail en cours.
 
 1. Lance `npm run check` (typecheck + lint + tests avec couverture). S'il echoue, arrete-toi
@@ -16,3 +13,4 @@ Prepare la livraison du travail en cours.
    la permission te demandera confirmation.
 4. Ne pousse pas. Le push et la PR sont faits par un humain (AGENTS.md : pas de commit
    direct dans `main`).
+[exit=0]
