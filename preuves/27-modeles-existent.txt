@@ -1,0 +1,5 @@
+$ node -e "const j=require(\"/tmp/claude-0/ochome/.cache/opencode/models.json\");const m=Object.keys(j.opencode.models);console.log(\"catalogue OpenCode (models.json) :\",m.length,\"modeles du fournisseur opencode\");for(const x of [\"deepseek-v4-pro\",\"deepseek-v4-flash\"]) console.log(x, m.includes(x)?\"PRESENT\":\"ABSENT\")"
+catalogue OpenCode (models.json) : 119 modeles du fournisseur opencode
+deepseek-v4-pro PRESENT
+deepseek-v4-flash PRESENT
+[exit=0]

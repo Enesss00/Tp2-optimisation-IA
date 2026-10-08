@@ -1,0 +1,54 @@
+$ echo "## npm start + /health"; (timeout 8 npm start >/tmp/claude-0/st.log 2>&1 &); sleep 4; curl -s -w " HTTP %{http_code}\n" localhost:3000/health; grep salles-api /tmp/claude-0/st.log
+echo "## npm run check"; npm run --silent check > /tmp/claude-0/chk.log 2>&1; echo "exit=$?"; grep -E "Test Files|Tests |All files" /tmp/claude-0/chk.log
+echo "## npm run test:mutation"; npm run --silent test:mutation 2>&1 | sed "s/\x1b\[[0-9;]*m//g" | grep -E "^All files|Final mutation"
+echo "## agents (résolus par OpenCode)"; /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh
+echo "## MCP"; HOME=/tmp/claude-0/ochome timeout 60 opencode mcp list 2>&1 | sed "s/\x1b\[[0-9;]*m//g" | grep -E "•"
+echo "## hook git"; git config core.hooksPath; ls -l .husky/pre-commit | cut -c1-10
+## npm start + /health
+{"ok":true} HTTP 200
+> salles-api@0.4.2 start
+salles-api sur http://localhost:3000
+## npm run check
+exit=0
+ Test Files  6 passed (6)
+      Tests  51 passed | 1 skipped (52)
+All files     |   98.83 |    96.29 |     100 |   98.83 |                   
+## npm run test:mutation
+All files     |  92.23 |   92.23 |      190 |         0 |         16 |        0 |        0 |
+10:20:42 (29364) INFO MutationTestReportHelper Final mutation score of 92.23 is greater than or equal to break threshold 70
+## agents (résolus par OpenCode)
+architect mode=primary  model=deepseek-v4-pro
+   outils actifs: question, bash, read, glob, grep, task, webfetch, todowrite
+   edit: *=deny
+   bash: *=deny git status*=allow git diff*=allow git log*=allow git branch*=allow ls*=allow npm run check*=allow npm test*=allow git add *=ask git commit *=ask git push*=deny
+finder    mode=subagent model=deepseek-v4-flash
+   outils actifs: read, glob, grep
+   edit: *=deny
+   bash: -
+explorer  mode=subagent model=deepseek-v4-flash
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/plans/*-notes.md=allow
+   bash: *=deny git log*=allow git show*=allow git diff*=allow git blame*=allow ls*=allow find *=allow curl*=allow
+planner   mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/plans/*.md=allow
+   bash: *=deny git log*=allow git diff*=allow ls*=allow
+dev       mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep, edit, write, webfetch, todowrite
+   edit: *=allow
+   bash: *=allow git push*=deny git reset --hard*=ask git clean*=ask rm -rf*=ask sudo*=deny curl * | *=ask
+reviewer  mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep
+   edit: *=deny
+   bash: *=deny git diff*=allow git log*=allow git show*=allow git status*=allow npm test*=allow npm run check*=allow npm run lint*=allow npm run typecheck*=allow npx vitest*=allow
+tester    mode=subagent model=deepseek-v4-flash
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/scratch/**=allow
+   bash: *=allow git commit*=deny git push*=deny git checkout*=deny git reset*=deny sudo*=deny
+## MCP
+•  ○ salles-db disabled
+•  ○ github disabled
+## hook git
+.husky/_
+-rwxr-xr-x
+[exit=0]

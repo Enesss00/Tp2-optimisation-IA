@@ -1,0 +1,22 @@
+$ export HOME=/tmp/claude-0/ochome
+echo "## temps de connexion des MCP (opencode mcp list), avant / après"; cd /tmp/claude-0/fa; s=$(date +%s); timeout 200 opencode mcp list >/dev/null 2>&1; echo "avant (7afa9bd) : $(( $(date +%s)-s )) s pour 6 serveurs (3 échecs)"; cd /home/user/Tp2-optimisation-IA; s=$(date +%s); timeout 200 opencode mcp list >/dev/null 2>&1; echo "après (HEAD)    : $(( $(date +%s)-s )) s, 0 serveur lancé"
+echo; echo "## taille des textes chargés (caractères ; ≈ tokens = /4), avant -> après"; for f in AGENTS.md src/lib/AGENTS.md .opencode/agent/*.md .opencode/command/ship.md; do printf "%-32s %6s -> %6s\n" $f $(git show 7afa9bd:$f | wc -c) $(wc -c <$f); done
+echo; echo "## définitions d outils MCP envoyées au modèle (agents intégrés build/plan/general) : ~27 000 tokens avant (preuves/17), 0 après"
+## temps de connexion des MCP (opencode mcp list), avant / après
+avant (7afa9bd) : 3 s pour 6 serveurs (3 échecs)
+après (HEAD)    : 2 s, 0 serveur lancé
+
+## taille des textes chargés (caractères ; ≈ tokens = /4), avant -> après
+AGENTS.md                          1323 ->   2309
+src/lib/AGENTS.md                   532 ->    532
+.opencode/agent/architect.md       5070 ->   5892
+.opencode/agent/dev.md             3166 ->   3282
+.opencode/agent/explorer.md        3042 ->   3090
+.opencode/agent/finder.md          2221 ->   2014
+.opencode/agent/planner.md         3210 ->   3211
+.opencode/agent/reviewer.md        3036 ->   3294
+.opencode/agent/tester.md          3281 ->   3281
+.opencode/command/ship.md           413 ->    940
+
+## définitions d outils MCP envoyées au modèle (agents intégrés build/plan/general) : ~27 000 tokens avant (preuves/17), 0 après
+[exit=0]
