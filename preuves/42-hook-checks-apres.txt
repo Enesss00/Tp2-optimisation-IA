@@ -1,0 +1,15 @@
+$ cp src/lib/overlap.ts /tmp/claude-0/ov.bak; sed -i "s/return a1 < b2 \&\& b1 < a2;/return true;/" src/lib/overlap.ts
+bash scripts/checks.sh >/tmp/claude-0/c.out 2>/tmp/claude-0/c.err; echo "exit=$? (toujours 0, voulu : INFRA-231)"
+echo "--- stdout recopié par le plugin contient maintenant le détail :"; grep -E "FAIL|AssertionError|❯ test|au moins un" /tmp/claude-0/c.out | head -6; echo "--- stderr : $(wc -l < /tmp/claude-0/c.err) lignes"
+cp /tmp/claude-0/ov.bak src/lib/overlap.ts; git diff --quiet src/lib/overlap.ts && echo "(overlap.ts restauré)"
+exit=0 (toujours 0, voulu : INFRA-231)
+--- stdout recopié par le plugin contient maintenant le détail :
+ ❯ test/overlap.spec.ts (7 tests | 3 failed | 1 skipped) 14ms
+ ❯ test/bookings.spec.ts (20 tests | 4 failed) 173ms
+ FAIL  test/bookings.spec.ts > POST /bookings > accepte une reservation qui commence quand la precedente finit
+AssertionError: expected 409 to be 201 // Object.is equality
+ ❯ test/bookings.spec.ts:75:27
+ FAIL  test/bookings.spec.ts > POST /bookings — validation > accepte une capacite exactement atteinte
+--- stderr : 0 lignes
+(overlap.ts restauré)
+[exit=0]
