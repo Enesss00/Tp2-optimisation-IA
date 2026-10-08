@@ -1,0 +1,4 @@
+$ git check-ignore -v .env; git ls-files | grep -c "^.env$"; git ls-files .env.example
+.gitignore:7:.env	.env
+0
+[exit=0]

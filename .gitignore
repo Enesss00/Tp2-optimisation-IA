@@ -4,3 +4,4 @@ coverage/
 .opencode/scratch/
 .stryker-tmp/
 reports/
+.env
