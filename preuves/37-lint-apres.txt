@@ -1,0 +1,27 @@
+$ echo "## lint sur le code existant :"; npm run --silent lint; echo "lint exit=$?"
+echo; echo "## même faute volontaire que preuves/07 :"; cp src/app.ts /tmp/claude-0/app.bak
+cat >> src/app.ts <<EOT
+const inutilise = 42;
+export function bug(x: any) { if (x == null) { debugger; } var y = undefined; return eval("x"); }
+EOT
+npm run --silent lint; echo "lint exit=$?"; cp /tmp/claude-0/app.bak src/app.ts; git diff --quiet src/app.ts && echo "(faute annulée)"
+## lint sur le code existant :
+lint exit=0
+
+## même faute volontaire que preuves/07 :
+
+/home/user/Tp2-optimisation-IA/src/app.ts
+  13:7   error  'inutilise' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  14:24  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  14:37  error  Expected '===' and instead saw '=='             eqeqeq
+  14:48  error  Unexpected 'debugger' statement                 no-debugger
+  14:60  error  Unexpected var, use let or const instead        no-var
+  14:64  error  'y' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  14:86  error  eval can be harmful                             no-eval
+
+✖ 7 problems (7 errors, 0 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
+lint exit=1
+(faute annulée)
+[exit=0]
