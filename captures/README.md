@@ -28,10 +28,13 @@
 | `avant-04-tache-architecte-seul.png` | **Aucune délégation** : l'architecte lit et écrit tout lui-même (`edit`, `write`). Le bloc « checks post-écriture » est vert alors que 2 bugs existent, parce qu'il ne lance que 2 fichiers de tests sur 4. |
 | `avant-05-tache-npm-test-absent.png` | Il suit AGENTS.md et lance `npm test` : `Missing script: "test"`. Son test, d'abord nommé `*.test.ts`, n'aurait jamais tourné : il le renomme après avoir lu `vitest.config.ts`. |
 | `avant-06-tache-test-aligne-sur-le-bug.png` | Il voit que `overlaps` bloque les créneaux bout à bout (« due to `<=` »), **modifie l'attente de son test** pour qu'il passe avec le bug (22 → 20 créneaux) et conclut « Done! ». Le bug est maintenant verrouillé par un test. Pas de plan, pas de relecture, pas de tester. |
-| `apres-04-tache-delegation.png` | L'architecte lit, puis **délègue** : `Planner Agent` écrit le plan, puis `Dev Agent` réalise les étapes une par une. Ce premier run a été coupé par la limite de 15 min de mon environnement, puis repris dans la même session (`--session … "continue"`). |
-| `apres-05-tache-plan.png` | Le plan écrit par `planner` dans `.opencode/plans/availability-endpoint.md` : objectifs, hors périmètre, hypothèses, étapes avec « Done when », cas limites, et notamment « booking at slot boundary → half-open intervals ». |
-| `apres-06-tache-fin.png` | Fin du run repris. Le **seuil de couverture** attrape du code mort dans la route, et l'architecte **délègue** la simplification à `Dev Agent` au lieu de la faire lui-même. Il tente `npm start &` : **refusé par ses permissions** (règles affichées). Il relance `npm run check` (vert, 98,26 %) avant de conclure. |
-| `apres-06b-tache-resultat.png` | Le résultat vérifié à la main : `npm run check` vert (61 tests). Sur l'API réelle, la réservation de 09:00 à 11:00 rend 09h et 10h « PRIS » et 11h « libre » (le bout à bout fonctionne). 30 février → 400, salle inconnue → 404. |
+| `apres-04-tache-delegation.png` | Run complet depuis une session neuve, sur le dépôt réparé : l'architecte lit, puis **délègue toute la boucle** : `Planner Agent` → `Dev Agent` ×4 → `npm run check` (68 tests verts) → `Tester Agent` → `Reviewer Agent`. Son `npm start &` est **refusé** par ses permissions (lancer l'app, c'est le rôle de tester). Le message final cite le verdict du reviewer : « NOTHING FOUND ». |
+| `apres-05-tache-plan.png` | Le plan écrit par `planner` dans `.opencode/plans/rooms-availability.md`. |
+| `apres-06-tache-resultat.png` | Vérification à la main du travail livré : `npm run check` vert (68 tests, 99 %), créneaux libres corrects autour de la réservation 09:00-11:00 (le 11h est libre), 400 sans date, 404 pour une salle inconnue. **Mais** le 30 février est accepté (200) et les créneaux se terminent à `T24:00:00Z` : un bug que le reviewer (« NOTHING FOUND ») et le tester n'ont pas vu. La chaîne marche ; ses verdicts restent des affirmations à vérifier. |
+
+> Un premier run « après » (avant le commit `7b3ec97`) avait délégué à planner et dev mais
+> sauté reviewer et tester. C'est ce constat qui a mené à rendre l'étape Verify obligatoire
+> dans le prompt de l'architecte.
 
 ## Briques du harness
 

@@ -55,17 +55,21 @@ Les deux runs utilisent OpenCode 1.18.35, une session neuve et la chaîne du dé
 quelle. Seul le modèle diffère du dépôt : `nemotron-3-ultra-free`, gratuit, dans les
 deux cas. Captures : `captures/avant-04` à `06` et `captures/apres-04` à `06`.
 
-| Observation | AVANT (`ab57521`) | APRÈS |
+| Observation | AVANT (`ab57521`) | APRÈS (session neuve, `7b3ec97`) |
 |---|---|---|
-| Qui travaille | l'architecte seul : il lit, écrit `src/lib/availability.ts`, édite la route et écrit les tests | l'architecte lit, puis délègue : `planner`, puis `dev` étape par étape |
-| Qui ne travaille jamais | planner (injoignable), finder, explorer, reviewer, tester | finder et explorer non sollicités (l'architecte a jugé la lecture suffisante, ce que son prompt autorise pour 2-3 appels) |
-| Plan écrit | aucun, `.opencode/plans/` reste vide | `.opencode/plans/availability-endpoint.md` : hypothèses, étapes avec « Done when », cas limites |
+| Qui travaille | l'architecte seul : il lit, écrit `src/lib/availability.ts`, édite la route et écrit les tests | toute la chaîne : `planner` → `dev` ×4 → `tester` → `reviewer`, orchestrée par l'architecte |
+| Qui ne travaille jamais | planner (injoignable), finder, explorer, reviewer, tester | finder et explorer, non sollicités : l'architecte a jugé que lire lui-même suffisait, ce que son prompt autorise pour 2-3 appels |
+| Plan écrit | aucun, `.opencode/plans/` reste vide | `.opencode/plans/rooms-availability.md` |
 | Ce qui échoue en silence | « checks post-écriture » vert : 2 fichiers de tests sur 4, les 2 bugs ne sont pas vus. `npm test` (AGENTS.md) : `Missing script` | — |
-| Le pire | l'agent constate que `overlaps` bloque les créneaux bout à bout (« due to `<=` ») et **change l'attente de son test pour qu'il passe avec le bug** (22 → 20 créneaux), puis annonce « Done! » | le plan prévoit explicitement le cas « réservation pile en bord de créneau → intervalles semi-ouverts », que le correctif P5 rend possible |
-| Le filet en action | rien : le hook post-écriture dit vert | le seuil de couverture à 90 % signale du code mort dans la route ; l'architecte renvoie la simplification à `dev` |
-| Droits | l'architecte écrit et lance tout | l'architecte tente `npm start &`, **refusé** par ses permissions |
-| Vérification finale | `npm run test:unit`, lancé par l'agent lui-même sur un filet troué | l'architecte lance `npm run check` (typecheck + lint + 61 tests + couverture 98,26 %) : vert. Vérifié aussi à la main sur l'API réelle (`captures/apres-06b`) |
-| Ce qui reste faible | — | `reviewer` et `tester` **n'ont pas été appelés**. Après le refus de `npm start`, l'architecte aurait dû passer par `tester` au lieu d'abandonner l'essai manuel. Le prompt les cite désormais dans la boucle, mais un petit modèle gratuit les saute. C'est le prochain réglage à faire, par exemple rendre `/ship` obligatoire pour livrer, car elle impose le reviewer. |
+| Le pire | l'agent constate que `overlaps` bloque les créneaux bout à bout (« due to `<=` ») et **change l'attente de son test pour qu'il passe avec le bug** (22 → 20 créneaux), puis annonce « Done! » | voir « Ce qui reste faible » |
+| Droits | l'architecte écrit et lance tout | l'architecte tente `npm start &`, **refusé** par ses permissions ; c'est `tester` qui pilote l'app |
+| Vérification finale | `npm run test:unit`, lancé par l'agent lui-même sur un filet troué | `npm run check` vert (68 tests, couverture 99 %), verdict du reviewer cité dans le message final |
+| Ce qui reste faible | — | Vérifié à la main (`captures/apres-06`) : le code livré **accepte le 30 février** et renvoie des fins de créneau `T24:00:00Z`. Le reviewer a pourtant rendu « NOTHING FOUND » et le tester n'a rien signalé. La structure est réparée, mais un verdict de subagent reste une affirmation. Sur ce run, le modèle était un petit modèle gratuit, pas le `deepseek-v4-pro` prévu pour le reviewer. |
+
+Historique : un premier run « après » avait délégué à planner et dev mais sauté reviewer et
+tester (il avait aussi été coupé par la limite de 15 min de mon environnement). Le commit
+`7b3ec97` rend l'étape Verify obligatoire dans le prompt de l'architecte ; le run ci-dessus
+est celui d'après ce commit.
 
 ---
 
@@ -467,9 +471,10 @@ design cherche à préserver : c'est corrigé avec P15.
 | Tests | P1, P2, P3, P4 ; bugs cachés P5, P6, P7 |
 | CI / Git | P13, P12, P10 |
 
-## Ce qu'il reste à faire à la main
-1. Les captures d'écran : voir `captures/README.md` (avant et après, plus la tâche de
-   référence relancée depuis une session neuve).
-2. `git push` vers `Enesss00/Tp2-optimisation-IA`, puis vérifier le job CI sur GitHub
-   (capture `apres-12-ci.png`).
-3. Signaler à l'équipe la rotation des secrets de recette (P12).
+## Ce qu'il reste à faire hors dépôt
+1. Changer le mot de passe Postgres de recette et `SESSION_SECRET` (P12) : ils restent dans
+   l'historique Git, et la correction se fait côté infrastructure de l'équipe.
+2. Si l'équipe le confirme, expliquer dans `src/lib/AGENTS.md` la règle de
+   l'`export default`, qui n'a pas pu être vérifiée.
+
+Les captures (`captures/`), le push et la CI GitHub (verte) sont faits.
