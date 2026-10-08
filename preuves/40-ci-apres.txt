@@ -1,0 +1,22 @@
+$ grep -n "run:\|branches" .github/workflows/ci.yml
+echo "## rejeu local des étapes, dans une copie propre (npm ci) :"; rm -rf /tmp/claude-0/ci && git clone -q . /tmp/claude-0/ci && cp .github/workflows/ci.yml /tmp/claude-0/ci/.github/workflows/ && cd /tmp/claude-0/ci
+for s in "npm ci" "npm run typecheck" "npm run lint" "npm test" "npm run test:mutation"; do $s >/tmp/claude-0/ci.log 2>&1; echo "$s -> exit=$?"; done
+echo "## même rejeu avec un test rouge commité (copie) :"; printf "import {it,expect} from \"vitest\";\nit(\"rouge\",()=>expect(1).toBe(2));\n" > test/rouge.spec.ts
+for s in "npm run typecheck" "npm run lint" "npm test"; do $s >/tmp/claude-0/ci.log 2>&1; echo "$s -> exit=$?"; done
+5:    branches: [main, master]
+17:      - run: npm ci
+18:      - run: npm run typecheck
+19:      - run: npm run lint
+20:      - run: npm test
+21:      - run: npm run test:mutation
+## rejeu local des étapes, dans une copie propre (npm ci) :
+npm ci -> exit=0
+npm run typecheck -> exit=0
+npm run lint -> exit=0
+npm test -> exit=0
+npm run test:mutation -> exit=0
+## même rejeu avec un test rouge commité (copie) :
+npm run typecheck -> exit=0
+npm run lint -> exit=0
+npm test -> exit=1
+[exit=0]
