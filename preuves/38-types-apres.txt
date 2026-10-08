@@ -1,0 +1,20 @@
+$ grep -n strict tsconfig.json; npm run --silent typecheck; echo "typecheck exit=$?"
+echo "## faute qui passait avec strict:false (paramètre any implicite, null non vérifié) :"; cp src/app.ts /tmp/claude-0/app.bak
+printf "export function f(x) { return x; }\nexport const n: number = null;\n" >> src/app.ts; npx tsc --noEmit; echo "typecheck exit=$?"; npx tsc --noEmit --strict false; echo "(avec strict:false : exit=$?)"; cp /tmp/claude-0/app.bak src/app.ts
+echo "## remettre // @ts-nocheck dans price.ts :"; cp src/lib/price.ts /tmp/claude-0/price.bak; sed -i "1i // @ts-nocheck" src/lib/price.ts; npx eslint src/lib/price.ts; echo "lint exit=$?"; cp /tmp/claude-0/price.bak src/lib/price.ts; git status --short src
+8:    "strict": true,
+typecheck exit=0
+## faute qui passait avec strict:false (paramètre any implicite, null non vérifié) :
+src/app.ts(13,19): error TS7006: Parameter 'x' implicitly has an 'any' type.
+src/app.ts(14,14): error TS2322: Type 'null' is not assignable to type 'number'.
+typecheck exit=2
+(avec strict:false : exit=0)
+## remettre // @ts-nocheck dans price.ts :
+
+/home/user/Tp2-optimisation-IA/src/lib/price.ts
+  1:1  error  Do not use "@ts-nocheck" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+
+✖ 1 problem (1 error, 0 warnings)
+
+lint exit=1
+[exit=0]
