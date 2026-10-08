@@ -1,0 +1,15 @@
+$ (PORT=3200 timeout 8 npx tsx src/server.ts >/dev/null 2>&1 &); sleep 3; echo "## API réelle : startsAt=\"1\", endsAt=\"2\""; curl -s -X POST localhost:3200/bookings -H "content-type: application/json" -d "{\"roomId\":\"salle-b\",\"who\":\"moi\",\"people\":1,\"startsAt\":\"1\",\"endsAt\":\"2\"}"; echo; echo "## tests :"; npx vitest run test/validate.spec.ts test/bookings.spec.ts 2>&1 | grep -E "×|Tests "
+## API réelle : startsAt="1", endsAt="2"
+{"booking":{"id":"bk-1003","roomId":"salle-b","who":"moi","people":1,"startsAt":"1","endsAt":"2","price":11160}}
+## tests :
+   × requireDate > refuse un nombre 5ms
+   × requireDate > refuse une annee seule 1ms
+   × requireDate > refuse un format americain 1ms
+   × requireDate > refuse une date sans heure 1ms
+   × requireDate > refuse une heure sans fuseau (interpretee en heure locale du serveur) 0ms
+   × requireDate > refuse un decalage autre que UTC 1ms
+   × requireDate > refuse un 30 fevrier (decale silencieusement au 2 mars) 0ms
+   × POST /bookings — dates > refuse des dates qui ne sont pas en ISO 8601 UTC 10ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  8 failed | 23 passed (31)
+[exit=0]

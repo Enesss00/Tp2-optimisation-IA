@@ -13,9 +13,15 @@ export function requireString(payload: Record<string, unknown>, field: string): 
   return value;
 }
 
+// ISO 8601 en UTC (suffixe Z), secondes et millisecondes facultatives.
+const ISO_UTC = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?Z$/;
+
 export function requireDate(payload: Record<string, unknown>, field: string): string {
   const value = requireString(payload, field);
-  if (Number.isNaN(Date.parse(value))) {
+  const match = ISO_UTC.exec(value);
+  const time = Date.parse(value);
+  // Le dernier test ecarte les dates impossibles que Date.parse decale (30 fevrier -> 2 mars).
+  if (!match || Number.isNaN(time) || new Date(time).toISOString().slice(0, 10) !== match[1]) {
     throw new ValidationError(`date invalide : ${field}`);
   }
   return value;

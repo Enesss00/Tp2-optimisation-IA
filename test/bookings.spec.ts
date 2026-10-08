@@ -180,3 +180,12 @@ describe("DELETE /bookings/:id", () => {
     expect(res.body.error).toBe("reservation inconnue");
   });
 });
+
+describe("POST /bookings — dates", () => {
+  it("refuse des dates qui ne sont pas en ISO 8601 UTC", async () => {
+    // "1" et "2" etaient acceptes : reservation du 1er janvier au 1er fevrier 2001, 11 160 EUR
+    const res = await post({ roomId: "salle-b", who: "moi", people: 1, startsAt: "1", endsAt: "2" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("date invalide : startsAt");
+  });
+});
