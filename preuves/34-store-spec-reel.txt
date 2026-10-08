@@ -1,0 +1,10 @@
+$ npx vitest run test/store.spec.ts 2>&1 | grep -E "✓|×|Tests "; echo "--- même sabotage que preuves/11 (findRoom -> undefined, bookingsForRoom -> []) :"; cp src/store.ts /tmp/claude-0/store.bak; sed -i "s/return rooms.find((r) => r.id === id);/return undefined;/; s/return bookings.filter((b) => b.roomId === roomId);/return [];/" src/store.ts; npx vitest run test/store.spec.ts 2>&1 | grep -E "×|Tests "; cp /tmp/claude-0/store.bak src/store.ts; git diff --quiet src/store.ts && echo "(store.ts restauré)"
+ ✓ test/store.spec.ts (6 tests) 5ms
+      Tests  6 passed (6)
+--- même sabotage que preuves/11 (findRoom -> undefined, bookingsForRoom -> []) :
+   × store > retrouve une salle par son identifiant 8ms
+   × store > ne retourne que les reservations de la salle demandee 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 4 passed (6)
+(store.ts restauré)
+[exit=0]
