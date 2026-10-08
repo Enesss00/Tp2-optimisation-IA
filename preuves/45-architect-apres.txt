@@ -1,0 +1,12 @@
+$ /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh 2>&1 | grep -A3 "^architect"; echo "task:"; HOME=/tmp/claude-0/ochome timeout 60 opencode debug agent architect 2>/dev/null | node -e "let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>console.log(JSON.parse(s).permission.filter(p=>p.permission===\"task\").map(p=>p.pattern+\"=\"+p.action).join(\" \")))"; echo; grep -n "should be answered\|never write code\|| .tester" .opencode/agent/architect.md
+architect mode=primary  model=deepseek-v4-pro
+   outils actifs: question, bash, read, glob, grep, task, webfetch, todowrite
+   edit: *=deny
+   bash: *=deny git status*=allow git diff*=allow git log*=allow git branch*=allow ls*=allow npm run check*=allow npm test*=allow git add *=ask git commit *=ask git push*=deny
+task:
+*=deny finder=allow explorer=allow planner=allow dev=allow reviewer=allow tester=allow
+
+40:decision to ship. You have a team, and you never write code yourself: every change to the
+49:**If a question can be answered by a subagent, it should be answered by a subagent.**
+64:| `tester`   | Running the real app and trying to break it, like a user would     | Writing unit tests, fixing code          |
+[exit=0]
