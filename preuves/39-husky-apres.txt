@@ -1,0 +1,16 @@
+$ echo "core.hooksPath = [$(git config core.hooksPath)]"; ls -l .husky/pre-commit; cat .husky/pre-commit
+echo "## même tentative que preuves/12 : commit d un test rouge + erreur de type"
+printf "import {it,expect} from \"vitest\";\nit(\"rouge\",()=>expect(1).toBe(2));\nconst x: number = \"pas un nombre\";\n" > test/rouge.spec.ts
+git add test/rouge.spec.ts; git -c user.email=t@t -c user.name=t commit -qm "test rouge" > /tmp/claude-0/hk.log 2>&1; rc=$?
+grep -E "error TS|husky|ERR" /tmp/claude-0/hk.log | head -4; echo "git commit exit=$rc"; [ $rc -ne 0 ] && echo ">>> COMMIT REFUSE par le hook pre-commit"
+git rm -q --cached test/rouge.spec.ts; rm test/rouge.spec.ts; git log --oneline -1
+core.hooksPath = [.husky/_]
+-rwxr-xr-x 1 root root 14 Oct  8 10:10 .husky/pre-commit
+npm run check
+## même tentative que preuves/12 : commit d un test rouge + erreur de type
+test/rouge.spec.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.
+husky - pre-commit script failed (code 2)
+git commit exit=1
+>>> COMMIT REFUSE par le hook pre-commit
+3b688a3 types: passer tsconfig en strict
+[exit=0]
