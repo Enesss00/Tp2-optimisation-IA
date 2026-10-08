@@ -47,6 +47,25 @@ Outils utilisés pour l'audit :
 
 ---
 
+## La tâche de référence, avant / après (exercice 1)
+
+Prompt : « Ajoute un endpoint GET /rooms/:id/availability?date=YYYY-MM-DD qui renvoie
+les créneaux libres d'une salle sur la journée demandée, avec ses tests. »
+Les deux runs utilisent OpenCode 1.18.35, une session neuve et la chaîne du dépôt telle
+quelle. Seul le modèle diffère du dépôt : `nemotron-3-ultra-free`, gratuit, dans les
+deux cas. Captures : `captures/avant-04` à `06` et `captures/apres-04` à `06`.
+
+| Observation | AVANT (`ab57521`) | APRÈS |
+|---|---|---|
+| Qui travaille | l'architecte seul : il lit, écrit `src/lib/availability.ts`, édite la route et écrit les tests | l'architecte lit, puis délègue : `planner`, puis `dev` étape par étape |
+| Qui ne travaille jamais | planner (injoignable), finder, explorer, reviewer, tester | finder et explorer non sollicités (l'architecte a jugé la lecture suffisante, ce que son prompt autorise pour 2-3 appels) |
+| Plan écrit | aucun, `.opencode/plans/` reste vide | `.opencode/plans/availability-endpoint.md` : hypothèses, étapes avec « Done when », cas limites |
+| Ce qui échoue en silence | « checks post-écriture » vert : 2 fichiers de tests sur 4, les 2 bugs ne sont pas vus. `npm test` (AGENTS.md) : `Missing script` | — |
+| Le pire | l'agent constate que `overlaps` bloque les créneaux bout à bout (« due to `<=` ») et **change l'attente de son test pour qu'il passe avec le bug** (22 → 20 créneaux), puis annonce « Done! » | le plan prévoit explicitement le cas « réservation pile en bord de créneau → intervalles semi-ouverts », que le correctif P5 rend possible |
+| Vérification finale | `npm run test:unit` lancé par l'agent lui-même, sur un filet troué | l'architecte lance `npm run check` (typecheck + lint + 61 tests + couverture) : vert |
+
+---
+
 ## Problèmes trouvés et corrigés
 
 ### Tests

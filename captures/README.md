@@ -1,98 +1,51 @@
-# Captures d'écran — à faire à la main
+# Captures d'écran — avant / après
 
-Le sujet exige des **captures d'écran** : un copier-coller de terminal ne compte pas.
-Les sorties texte de toutes les commandes lancées pendant l'audit sont dans `preuves/` :
-elles servent de référence pour savoir ce que chaque capture doit montrer.
+## Comment elles ont été produites
 
-Dépose les images dans ce dossier, avec exactement les noms ci-dessous.
+- **Captures de terminal.** Chaque commande a été **réellement exécutée**, au moment de
+  la capture, dans un pseudo-terminal (`script`) pour garder les couleurs. Sa sortie a
+  ensuite été affichée dans un vrai terminal web (xterm.js) et photographiée avec
+  Chromium. La ligne d'invite montre la commande lancée. Rien n'est retapé à la main.
+- **État AVANT** : un clone neuf du dépôt d'origine
+  (`https://github.com/0xaitox/ai-tools-repo-malade`, commit `ab57521`), dans `~/tp2-avant`.
+- **État APRÈS** : ce dépôt (`~/Tp2-optimisation-IA`) ; pour la tâche de référence, une
+  copie dans `~/tp2-apres`.
+- **Tâche de référence sous OpenCode** (1.18.35), lancée depuis une session neuve, sans
+  aide ni reformulation :
+  > Ajoute un endpoint GET /rooms/:id/availability?date=YYYY-MM-DD qui renvoie les
+  > créneaux libres d'une salle sur la journée demandée, avec ses tests.
 
----
+  Seule différence avec le dépôt : le modèle. `opencode/deepseek-v4-pro` est payant, il a
+  été remplacé par `opencode/nemotron-3-ultra-free` dans les deux copies (avant et
+  après), et rien d'autre n'a changé. La chaîne d'agents, les permissions, les hooks et
+  les MCP sont ceux du dépôt.
+- **CI** : capture de la vraie page GitHub Actions du dépôt.
 
-## 0. Préparer les deux états
+## Tâche de référence
 
-L'état **avant** se capture dans un clone séparé du dépôt d'origine. N'utilise surtout pas
-ton dépôt de rendu : dans la version d'origine, l'architecte a `bash: "*": allow` et
-`/ship` fait un `git push` sans demander. Un clone du dépôt du prof ne peut pas pousser.
+| Fichier | Ce qu'il montre |
+|---|---|
+| `avant-04-tache-architecte-seul.png` | **Aucune délégation** : l'architecte lit et écrit tout lui-même (`edit`, `write`). Le bloc « checks post-écriture » est vert alors que 2 bugs existent, parce qu'il ne lance que 2 fichiers de tests sur 4. |
+| `avant-05-tache-npm-test-absent.png` | Il suit AGENTS.md et lance `npm test` : `Missing script: "test"`. Son test, d'abord nommé `*.test.ts`, n'aurait jamais tourné : il le renomme après avoir lu `vitest.config.ts`. |
+| `avant-06-tache-test-aligne-sur-le-bug.png` | Il voit que `overlaps` bloque les créneaux bout à bout (« due to `<=` »), **modifie l'attente de son test** pour qu'il passe avec le bug (22 → 20 créneaux) et conclut « Done! ». Le bug est maintenant verrouillé par un test. Pas de plan, pas de relecture, pas de tester. |
+| `apres-04-tache-delegation.png` | L'architecte lit, puis **délègue** : `Planner Agent` écrit le plan, puis `Dev Agent` réalise les étapes une par une. Ce premier run a été coupé par la limite de 15 min de mon environnement, puis repris dans la même session (`--session … "continue"`). |
+| `apres-05-tache-plan.png` | Le plan écrit par `planner` dans `.opencode/plans/availability-endpoint.md` : objectifs, hors périmètre, hypothèses, étapes avec « Done when », cas limites, et notamment « booking at slot boundary → half-open intervals ». |
+| `apres-06-tache-fin.png` | La fin du run repris : tests ajoutés, vérification et rapport final de l'architecte. |
 
-```bash
-# AVANT : dépôt d'origine, intact
-git clone https://github.com/0xaitox/ai-tools-repo-malade ~/tp2-avant
-cd ~/tp2-avant && npm install
+## Briques du harness
 
-# APRÈS : ce dépôt, réparé
-cd ~/Tp2-optimisation-IA && npm install      # active aussi le hook pre-commit
-```
-
-Dans les deux cas, lance OpenCode depuis la racine du dépôt (`opencode`), dans une
-**session neuve**. L'agent par défaut est `architect`.
-
-## 1. La tâche de référence (exercice 1) — avant et après
-
-Prompt à coller **tel quel**, sans aider ni reformuler :
-
-```
-Ajoute un endpoint GET /rooms/:id/availability?date=YYYY-MM-DD qui renvoie les créneaux libres d'une salle sur la journée demandée, avec ses tests.
-```
-
-Pendant que la chaîne travaille, observe et note :
-
-| Point à observer | Ce qui est attendu AVANT (dépôt malade) | Ce qui est attendu APRÈS |
+| AVANT | APRÈS | Ce que la paire montre |
 |---|---|---|
-| Qui travaille | `architect` fait le travail lui-même (lecture, `edit`, `bash`), ou délègue à `general` | `architect` délègue : finder/explorer → planner → dev → reviewer (→ tester) |
-| Qui ne travaille jamais | `planner` (mode primary, absent de l'outil `task`), `tester` (absent du tableau de l'équipe) | tous joignables ; `planner` écrit `.opencode/plans/<slug>.md` |
-| Ce que renvoie `finder` | une réponse en prose **sans aucun appel à read/glob/grep** (tous ses outils sont refusés) | une liste `def:/use: chemin:ligne` après des appels à grep/read |
-| Qui écrit quoi | l'architecte et/ou le reviewer modifient le code ; dev peut lancer d'autres dev | seul `dev` modifie `src/` et `test/` ; le reviewer ne fait que rendre un verdict |
-| Les tests écrits | si l'agent suit `vitest.config.ts`, il nomme le fichier `*.spec.ts` ; s'il copie `bookings.test.ts`, son test **n'est jamais exécuté** | `*.spec.ts`, exécutés, couverture ≥ 90 % |
-| Ce qui échoue en silence | le bloc « checks post-écriture » dit vert alors que 2 bugs existent (tests cachés) ; une délégation qui échoue n'est pas signalée ; AGENTS.md fait lancer `npm test` (script absent) | `npm run check` rouge si quelque chose casse ; le hook pre-commit bloque |
-| Fin de tâche | « done » sans preuve ; essaie `npm test` / `npm run build` (absents) | l'architecte lance `npm run check` et montre le code de sortie |
-
-À la fin de la tâche, dans un terminal :
-
-```bash
-git status && git diff --stat
-ls .opencode/plans/
-npm run test:unit            # AVANT ; APRÈS : npm run check
-```
-
-## 2. Liste des captures
-
-### Avant (dans `~/tp2-avant`)
-
-| Fichier | Commande / action | Ce qu'elle doit montrer |
-|---|---|---|
-| `avant-01-agents.png` | `opencode agent list` | `planner (primary)` alors que le README annonce 6 subagents |
-| `avant-02-finder-sans-outils.png` | `opencode debug agent finder` (faire défiler jusqu'à `"tools"`) | `"read": false, "glob": false, "grep": false` : finder ne peut rien lire |
-| `avant-03-mcp.png` | `opencode mcp list` | salles-db failed (502), slack failed, sentry needs authentication |
-| `avant-04-tache-delegation.png` | la tâche de référence dans OpenCode | qui l'architecte appelle, ou le fait qu'il édite lui-même |
-| `avant-05-tache-finder.png` | ouvrir la session enfant de `finder` si elle est appelée | réponse sans aucun appel d'outil de lecture |
-| `avant-06-tache-fin.png` | message final + `git status` | ce qui a été produit, les fichiers écrits et par qui |
-| `avant-07-tests-verts.png` | `npm run test:unit` | « 5 passed, 4 skipped », seulement 2 fichiers sur 4 |
-| `avant-08-tests-caches.png` | `npx vitest run test/bookings.test.ts test/price.test.ts --config /dev/null` | 2 échecs : `'5020'` au lieu de 70, `409` au lieu de 201 |
-| `avant-09-bugs-api.png` | `npm start` puis les deux `curl` de `preuves/06-bugs-api-reelle.txt` | `"price":"5020"` et un 409 sur un créneau bout à bout |
-| `avant-10-lint-aveugle.png` | ajouter `var y = eval("1"); if (y == null) { debugger; }` à `src/app.ts`, puis `npm run lint ; echo $?` (annuler ensuite) | exit 0 : aucune règle active |
-| `avant-11-commit-accepte.png` | créer un test rouge, `git add` + `git commit` | le commit passe : aucun hook Git actif |
-| `avant-12-ci.png` | `cat .github/workflows/ci.yml` (ou l'onglet Actions sur GitHub) | seulement `npm run lint`, tests commentés |
-| `avant-13-couverture.png` | `npm i -D @vitest/coverage-v8@2.1.9 && npx vitest run --coverage --coverage.include='src/**'` | 21 % de lignes couvertes, routes à 0 % |
-| `avant-14-ship.png` | `cat .opencode/command/ship.md` | `git add -A`, `git push`, « ne relance pas les checks » |
-
-### Après (dans `~/Tp2-optimisation-IA`)
-
-| Fichier | Commande / action | Ce qu'elle doit montrer |
-|---|---|---|
-| `apres-01-agents.png` | `opencode agent list` | architect seul primary, 6 subagents dont planner |
-| `apres-02-finder-outils.png` | `opencode debug agent finder` | `"read": true, "glob": true, "grep": true` |
-| `apres-03-mcp.png` | `opencode mcp list` | salles-db et github `disabled`, plus aucun échec |
-| `apres-04-tache-delegation.png` | la même tâche, session neuve | la suite des délégations finder/explorer → planner → dev → reviewer (→ tester) |
-| `apres-05-tache-plan.png` | `cat .opencode/plans/*.md` après le passage du planner | le plan écrit sur disque |
-| `apres-06-tache-fin.png` | message final + `npm run check` | l'endpoint, ses tests `*.spec.ts`, check vert (ou rouge **signalé**) |
-| `apres-07-check.png` | `npm run check` | typecheck + lint + 51 tests + couverture ≈ 98,8 % |
-| `apres-08-mutation.png` | `npm run test:mutation` | score ≈ 92 % (4,4 % avant) |
-| `apres-09-lint.png` | même faute que `avant-10`, puis `npm run lint` | 7 erreurs, exit 1 |
-| `apres-10-commit-refuse.png` | même test rouge que `avant-11`, `git commit` | « husky - pre-commit script failed », commit refusé |
-| `apres-11-api.png` | `npm start` + les `curl` de `preuves/06` et un `curl` avec `"startsAt":"1"` | prix `70` (nombre), 201 sur le créneau bout à bout, 400 sur la date `"1"` |
-| `apres-12-ci.png` | l'onglet Actions sur GitHub après ton push | job vert : typecheck, lint, test, test:mutation |
-| `apres-13-git-log.png` | `git log --oneline` | un commit par problème |
-
-> Raccourci utile : dans le TUI d'OpenCode, quand un subagent est lancé, sa session
-> enfant est accessible depuis la carte de l'outil `task`. C'est là qu'on voit si
-> `finder` a réellement lu quelque chose.
+| `avant-01-agents.png` | `apres-01-agents.png` | `planner (primary)`, donc injoignable par `task` → `planner (subagent)` |
+| `avant-02-finder-sans-outils.png` | `apres-02-finder-outils.png` | finder : `read/glob/grep: false` (aucun outil) → `true` |
+| `avant-03-mcp.png` | `apres-03-mcp.png` | 6 MCP, dont 3 en échec ou en attente → 2 déclarés et désactivés |
+| `avant-07-tests-verts.png` | `apres-07-check.png` | « 5 passed, 4 skipped » sur 2 fichiers → `npm run check` : typecheck + lint + 51 tests + couverture 98,8 % |
+| `avant-08-tests-caches.png` | (corrigés) | les 2 fichiers `*.test.ts` jamais lancés : 2 échecs (`'5020'`, `409`) |
+| `avant-09-bugs-api.png` | `apres-11-api.png` | prix `"5020"`, 409 bout à bout, date `"1"` acceptée à 11 160 € → `70`, 201, 400 |
+| `avant-10-lint-aveugle.png` | `apres-09-lint.png` | `any`, `var`, `eval`, `==`, `debugger` : exit 0 → 7 erreurs, exit 1 |
+| `avant-11-commit-accepte.png` | `apres-10-commit-refuse.png` | commit d'un test rouge avec une erreur de type : accepté → « husky - pre-commit script failed » |
+| `avant-12-ci.png` | `apres-12-ci.png` | CI = `npm run lint` seul, tests commentés → vrai run GitHub Actions vert : typecheck, lint, test, mutation |
+| `avant-13-couverture.png` | `apres-07-check.png` | couverture 21 % → 98,8 % |
+| `avant-15-mutation.png` | `apres-08-mutation.png` | score de mutation 4,4 % → 92 % |
+| `avant-14-ship.png` | — | `/ship` : `git add -A` + `git push` sans checks, architecte `bash "*": allow` |
+| — | `apres-13-git-log.png` | un commit par problème |
