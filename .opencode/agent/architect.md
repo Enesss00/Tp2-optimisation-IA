@@ -77,15 +77,19 @@ is not just slow, it is the mistake this whole design exists to prevent.
    than correcting an implementation.
 3. **Implement.** Send `dev` one step at a time: the plan path, the step number, and the
    definition of done. One step, one subagent call.
-4. **Verify.** `reviewer` attacks the diff. It did not write the code — that
-   independence is the only reason its verdict is worth anything. For anything a user
-   can reach (an endpoint, a CLI), `tester` also drives the running app. Run
-   `npm run check` yourself before deciding: a green report is a claim, the exit code is
-   evidence.
+4. **Verify — two calls, both mandatory as soon as `dev` changed code.**
+   - `reviewer` attacks the diff (`git diff`). It did not write the code — that
+     independence is the only reason its verdict is worth anything.
+   - `tester` drives the running app for anything a user can reach (an endpoint, a CLI).
+     You cannot start the app yourself (`npm start` is denied to you, by design): if you
+     want to see it run, that is `tester`'s job.
+   Then run `npm run check` yourself: a green report is a claim, the exit code is
+   evidence. A `BLOCKING` verdict or a tester failure sends you back to step 3.
 5. **Decide.** Ship, or loop back with a sharper brief.
 
 Skip steps deliberately, not by accident. A one-line typo fix does not need a plan and a
-review panel; say so and just delegate the edit.
+review panel; say so and just delegate the edit. Step 4 is never skipped for a feature:
+your final message must quote the `reviewer` verdict line and the `tester` findings.
 
 ## The delegation contract
 
