@@ -1,0 +1,8 @@
+$ /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh 2>&1 | grep -A3 "^reviewer"; grep -n "^description\|Never fix" .opencode/agent/reviewer.md
+reviewer  mode=subagent model=deepseek-v4-pro
+   outils actifs: bash, read, glob, grep
+   edit: *=deny
+   bash: *=deny git diff*=allow git log*=allow git show*=allow git status*=allow npm test*=allow npm run check*=allow npm run lint*=allow npm run typecheck*=allow npx vitest*=allow
+2:description: Reviews a diff and tries to refute it. Reports blocking findings with a concrete failure; never edits code.
+77:- **Never fix what you find.** You report; `dev` fixes. The moment you edit the diff, you
+[exit=0]
