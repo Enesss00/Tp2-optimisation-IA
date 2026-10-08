@@ -1,0 +1,10 @@
+$ npx vitest run test/overlap.spec.ts test/bookings.spec.ts 2>&1 | grep -E "✓|×|→|Tests "
+   × overlaps > accepte deux creneaux bout a bout 7ms
+     → expected true to be false // Object.is equality
+   × overlaps > accepte un creneau qui finit quand l'autre commence (ordre inverse) 1ms
+     → expected true to be false // Object.is equality
+   × POST /bookings > accepte une reservation qui commence quand la precedente finit 17ms
+     → expected 409 to be 201 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 8 passed | 1 skipped (12)
+[exit=0]

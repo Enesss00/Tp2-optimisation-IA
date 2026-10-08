@@ -1,0 +1,5 @@
+$ npx vitest run test/overlap.spec.ts test/bookings.spec.ts 2>&1 | grep -E "✓|×|→|Tests "
+ ✓ test/overlap.spec.ts (7 tests | 1 skipped) 3ms
+ ✓ test/bookings.spec.ts (5 tests) 81ms
+      Tests  11 passed | 1 skipped (12)
+[exit=0]
