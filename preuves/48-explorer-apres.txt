@@ -1,0 +1,6 @@
+$ /tmp/claude-0/-home-user-Tp2-optimisation-IA/d8d92467-4f36-5e00-835a-ec49d6973bc3/scratchpad/agents.sh 2>&1 | grep -A3 "^explorer"
+explorer  mode=subagent model=deepseek-v4-flash
+   outils actifs: bash, read, glob, grep, edit, write, webfetch
+   edit: *=deny .opencode/plans/*-notes.md=allow
+   bash: *=deny git log*=allow git show*=allow git diff*=allow git blame*=allow ls*=allow find *=allow curl*=allow
+[exit=0]
